@@ -85,8 +85,12 @@ struct SettingsView: View {
 
                     VStack(spacing: 0) {
 
-                        Button {
-                            // Privacy & Security will be added later.
+                        // Phase 6: opens the informational screen (same
+                        // row; same pattern as the Notifications row).
+                        NavigationLink {
+
+                            PrivacySecurityView()
+
                         } label: {
 
                             SettingsNavigationRow(
@@ -99,8 +103,11 @@ struct SettingsView: View {
                         Divider()
                             .padding(.leading, 52)
 
-                        Button {
-                            // Help & Support will be added later.
+                        // Phase 6: opens the informational screen.
+                        NavigationLink {
+
+                            HelpSupportView()
+
                         } label: {
 
                             SettingsNavigationRow(

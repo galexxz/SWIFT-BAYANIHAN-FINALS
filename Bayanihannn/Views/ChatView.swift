@@ -382,6 +382,19 @@ struct ChatView: View {
                                 }
                             }
                         }
+                        // Phase 4: open the conversation at the newest
+                        // message (after the first layout pass).
+                        .onAppear {
+                            if let lastMessage = messages.last {
+
+                                DispatchQueue.main.async {
+                                    proxy.scrollTo(
+                                        lastMessage.id,
+                                        anchor: .bottom
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -418,6 +431,14 @@ struct ChatView: View {
                 .font(.system(size: 9))
                 .foregroundStyle(.black)
                 .lineLimit(1...4)
+                // Phase 4: typed/pasted text is capped at the
+                // 1,000-character message limit.
+                .onChange(of: messageText) { _, newValue in
+                    let limited = MessagingRules.limitedInput(newValue)
+                    if limited != newValue {
+                        messageText = limited
+                    }
+                }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 9)
                 .background(
@@ -484,6 +505,14 @@ struct ChatView: View {
         }
         .navigationTitle("Chat")
         .navigationBarTitleDisplayMode(.inline)
+        // Phase 4: opening the chat marks it read for this participant;
+        // messages that arrive while it is open are marked read too.
+        .onAppear {
+            controller.markConversationRead(requestID: request.id)
+        }
+        .onChange(of: messages.count) {
+            controller.markConversationRead(requestID: request.id)
+        }
         .alert(
             "Attachments Unavailable",
             isPresented: $showAttachmentAlert
@@ -515,12 +544,20 @@ struct ChatView: View {
             return
         }
 
-        controller.sendMessage(
-            text: trimmedMessage,
-            requestID: request.id
-        )
+        // Phase 4: the text is cleared ONLY after a successful send. If the
+        // Controller rejects it (not a participant, too long, …) the typed
+        // text stays in the field so nothing is lost.
+        do {
+            try controller.sendMessage(
+                text: trimmedMessage,
+                requestID: request.id
+            )
 
-        messageText = ""
+            messageText = ""
+
+        } catch {
+            print("ChatView: Message not sent: \(error.localizedDescription)")
+        }
     }
 
 

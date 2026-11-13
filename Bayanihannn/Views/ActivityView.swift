@@ -6,24 +6,23 @@ struct ActivityView: View {
 
     @State private var selectedType: ActivityType = .all
 
+    // Phase 5: PERSONAL feed — the signed-in user's own activities plus
+    // activities on requests they posted (newest first), then the existing
+    // All / Volunteered / Posted filter.
     private var filteredActivities: [CommunityActivity] {
 
-        controller.activities
+        controller.visibleActivities
             .filter {
                 selectedType == .all || $0.type == selectedType
             }
-            .sorted {
-                $0.date > $1.date
-            }
     }
 
+    // Phase 5: linked by request id (no title-text matching).
     private func associatedRequest(
         for activity: CommunityActivity
     ) -> CommunityRequest? {
 
-        controller.requests.first { request in
-            activity.message.contains(request.title)
-        }
+        controller.linkedRequest(id: activity.requestID)
     }
 
     var body: some View {
@@ -125,7 +124,11 @@ struct ActivityView: View {
 
                                             ActivityRow(
                                                 activity: activity,
-                                                associatedRequest: request
+                                                associatedRequest: request,
+                                                actorDisplayName:
+                                                    controller.activityDisplayName(
+                                                        for: activity
+                                                    )
                                             )
                                         }
                                         .buttonStyle(.plain)
@@ -134,7 +137,11 @@ struct ActivityView: View {
 
                                         ActivityRow(
                                             activity: activity,
-                                            associatedRequest: nil
+                                            associatedRequest: nil,
+                                            actorDisplayName:
+                                                controller.activityDisplayName(
+                                                    for: activity
+                                                )
                                         )
                                     }
                                 }
@@ -161,6 +168,14 @@ struct ActivityRow: View {
     let activity: CommunityActivity
     let associatedRequest: CommunityRequest?
 
+    // Phase 5: "You" for the signed-in actor, otherwise the actor's name
+    // (computed by the Controller from account ids). Same text styling.
+    var actorDisplayName: String? = nil
+
+    private var actorName: String {
+        actorDisplayName ?? activity.actorName
+    }
+
     var body: some View {
 
         HStack(
@@ -180,7 +195,7 @@ struct ActivityRow: View {
                     )
 
                 Text(
-                    initials(activity.actorName)
+                    initials(actorName)
                 )
                 .font(
                     .system(
@@ -208,7 +223,7 @@ struct ActivityRow: View {
 
                 HStack(spacing: 5) {
 
-                    Text(activity.actorName)
+                    Text(actorName)
                         .font(
                             .system(
                                 size: 9,

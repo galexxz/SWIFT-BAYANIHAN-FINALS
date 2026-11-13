@@ -121,7 +121,9 @@ final class BayanihanController {
 
     // MARK: - Activities
 
-    var activities: [CommunityActivity] = [
+    // Phase 5 (L2): read-only outside the Controller. Views must use the
+    // filtered `visibleActivities` (personal feed), never this raw list.
+    private(set) var activities: [CommunityActivity] = [
 
         CommunityActivity(
             id: UUID(),
@@ -172,7 +174,10 @@ final class BayanihanController {
 
     // MARK: - Notifications
 
-    var notifications: [CommunityNotification] = [
+    // Phase 5 (L2): read-only outside the Controller. Views must use the
+    // per-account `visibleNotifications`, never this raw list (it holds
+    // every account's notifications on this device).
+    private(set) var notifications: [CommunityNotification] = [
 
         CommunityNotification(
             title: "Helper Found",
@@ -195,6 +200,25 @@ final class BayanihanController {
     // MARK: - Chat Messages
 
     var chatMessages: [ChatMessage] = []
+
+    // Phase 4: when each user last read each conversation (all users on
+    // this device; lookups are always filtered by the signed-in user).
+    private(set) var conversationReadStates: [ConversationReadState] = []
+
+    // Phase 4: messages created before Phase 4 was installed count as read
+    // for everyone (no sudden unread badges after the upgrade). Set from
+    // the completion time of MessagingRules.readStateMigrationName.
+    private var messageReadCutoff: Date?
+
+    // Phase 5: account id → current display name, used to show the correct
+    // person's name in the Activity feed (refreshed whenever accounts or
+    // names can change). Local-only lookup; a user directory with Firebase.
+    private var accountNames: [UUID: String] = [:]
+
+    // Phase 6: every account's bookmarks and reports on this device (all
+    // lookups are filtered by the signed-in account).
+    private(set) var bookmarks: [RequestBookmark] = []
+    private(set) var requestReports: [RequestReport] = []
 
 
     // MARK: - Help Agreements
@@ -268,6 +292,28 @@ final class BayanihanController {
 
         // Phase 2: link existing data to accounts (runs once per store).
         runIdentityMigrationIfNeeded()
+
+        // Phase 4: unread tracking. The first launch with Phase 4 records
+        // the "already read" cutoff once (additive; no data is changed),
+        // then saved read states are loaded.
+        if !dataStore.hasCompletedMigration(MessagingRules.readStateMigrationName) {
+            dataStore.markMigrationCompleted(MessagingRules.readStateMigrationName)
+        }
+
+        messageReadCutoff = dataStore.migrationCompletedAt(MessagingRules.readStateMigrationName)
+
+        conversationReadStates = dataStore
+            .loadConversationReadStates()
+            .map(ConversationReadState.init(persisted:))
+
+        // Phase 5: link older activities/notifications (runs once per store)
+        // and load account names for the Activity feed.
+        runActivityNotificationMigrationIfNeeded()
+        refreshAccountNames()
+
+        // Phase 6: saved bookmarks and reports.
+        bookmarks = dataStore.loadBookmarks().map(RequestBookmark.init(persisted:))
+        requestReports = dataStore.loadRequestReports().map(RequestReport.init(persisted:))
 
         // Phase 2: automatic login when "Remember Me" was used.
         if let rememberedUser = authService.restoreSession() {
@@ -379,6 +425,346 @@ final class BayanihanController {
         dataStore.saveHelpAgreement(agreement.toPersisted())
     }
 
+    private func persist(_ notification: CommunityNotification) {
+        dataStore.saveNotification(notification.toPersisted())
+    }
+
+
+    // MARK: - Activity / Notification Migration (Phase 5)
+
+    /// Additive upgrade of older activities/notifications, in two steps.
+    /// Titles, messages, dates and read states are kept; nothing is
+    /// deleted or reset; no actor is invented; existing values are never
+    /// overwritten.
+    private func runActivityNotificationMigrationIfNeeded() {
+
+        // Step 1 (M1): link requests by EXACT quoted title — runs once.
+        if !dataStore.hasCompletedMigration(ActivityNotificationMigrationV1.name) {
+
+            let result = ActivityNotificationMigrationV1.linkRequests(
+                activities: &activities,
+                notifications: &notifications,
+                requests: requests
+            )
+
+            for activity in activities where result.changedActivityIDs.contains(activity.id) {
+                persist(activity)
+            }
+
+            for notification in notifications where result.changedNotificationIDs.contains(notification.id) {
+                persist(notification)
+            }
+
+            dataStore.markMigrationCompleted(ActivityNotificationMigrationV1.name)
+        }
+
+        // Step 2 (H1 + L1): give old notifications to the original demo
+        // account. Recorded as complete ONLY when no notification is left
+        // without an owner; otherwise retried safely on the next launch.
+        if !dataStore.hasCompletedMigration(ActivityNotificationMigrationV1.ownerAssignmentName) {
+
+            let changed = ActivityNotificationMigrationV1.assignOwners(
+                notifications: &notifications,
+                originalAccountID: originalDemoAccountID()
+            )
+
+            for notification in notifications where changed.contains(notification.id) {
+                persist(notification)
+            }
+
+            if ActivityNotificationMigrationV1.needsOwnerAssignment(notifications) {
+                print("BayanihanController: Some older notifications have no owner yet; will retry on next launch.")
+            } else {
+                dataStore.markMigrationCompleted(ActivityNotificationMigrationV1.ownerAssignmentName)
+            }
+        }
+    }
+
+    /// The original demo account (Alex), found by the demo username/email
+    /// first; only if no such account exists, the owner of the OLDEST
+    /// legacy "You" activity. Nil when neither exists.
+    private func originalDemoAccountID() -> UUID? {
+        ActivityNotificationMigrationV1.originalAccountID(
+            accounts: localAuth.allAccounts(),
+            activities: activities
+        )
+    }
+
+    private func refreshAccountNames() {
+        accountNames = Dictionary(
+            localAuth.allAccounts().map { ($0.id, $0.name) },
+            uniquingKeysWith: { first, _ in first }
+        )
+    }
+
+
+    // MARK: - Recording Activities & Notifications (Phase 5)
+
+    /// Adds an activity for the signed-in user about a request. Activities
+    /// store the actor's real name; the feed shows "You" to the actor.
+    /// Requester actions are filed under "Posted", helper actions under
+    /// "Volunteered" (no new filter segments).
+    private func recordActivity(
+        _ message: String,
+        aboutRequestAt index: Int
+    ) {
+
+        let type: ActivityType = role(in: requests[index]) == .requester
+            ? .posted
+            : .volunteered
+
+        let activity = CommunityActivity(
+            id: UUID(),
+            message: message,
+            date: Date(),
+            type: type,
+            actorName: currentUser.name,
+            actorID: currentUser.id,
+            requestID: requests[index].id
+        )
+
+        activities.insert(activity, at: 0)
+
+        persist(activity)
+    }
+
+    /// Notifies the right participant about an action the signed-in user
+    /// just completed successfully. Never notifies the actor; one-time
+    /// events are never duplicated; message notifications are merged per
+    /// conversation.
+    private func notify(
+        _ event: NotificationEvent,
+        aboutRequestAt index: Int
+    ) {
+
+        guard isLoggedIn,
+              let draft = NotificationRules.draft(
+                for: event,
+                request: requests[index],
+                actorID: currentUser.id,
+                actorName: currentUser.name
+              ),
+              let saved = NotificationRules.apply(
+                draft,
+                to: &notifications,
+                now: Date()
+              )
+        else {
+            return
+        }
+
+        persist(saved)
+    }
+
+
+    // MARK: - Notifications (Phase 5)
+
+    /// The signed-in user's notifications only, newest first.
+    var visibleNotifications: [CommunityNotification] {
+        NotificationRules.visible(
+            notifications,
+            to: isLoggedIn ? currentUser.id : nil
+        )
+    }
+
+    /// Unread notifications for the signed-in user (Home bell badge).
+    var unreadNotificationCount: Int {
+        NotificationRules.unreadCount(
+            notifications,
+            for: isLoggedIn ? currentUser.id : nil
+        )
+    }
+
+    /// Marks one of the signed-in user's notifications read (tap).
+    func markNotificationRead(
+        _ notificationID: UUID
+    ) {
+
+        guard isLoggedIn,
+              let index = notifications.firstIndex(where: {
+                $0.id == notificationID && $0.recipientID == currentUser.id
+              }),
+              !notifications[index].isRead
+        else {
+            return
+        }
+
+        notifications[index].isRead = true
+
+        persist(notifications[index])
+    }
+
+    /// Phase 5 (M2): marks the signed-in user's merged "New Message"
+    /// notification for one conversation read (if it exists and is unread).
+    private func markMessageNotificationRead(
+        requestID: UUID
+    ) {
+
+        guard isLoggedIn else {
+            return
+        }
+
+        let key = NotificationRules.dedupeKey(
+            event: .newMessage,
+            requestID: requestID,
+            recipientID: currentUser.id
+        )
+
+        guard let index = notifications.firstIndex(where: {
+            $0.dedupeKey == key && $0.recipientID == currentUser.id
+        }),
+              !notifications[index].isRead
+        else {
+            return
+        }
+
+        notifications[index].isRead = true
+
+        persist(notifications[index])
+    }
+
+    /// Marks every unread notification of the signed-in user read (when
+    /// leaving the Notifications screen).
+    func markAllNotificationsRead() {
+
+        guard isLoggedIn else {
+            return
+        }
+
+        for index in notifications.indices
+        where notifications[index].recipientID == currentUser.id &&
+            !notifications[index].isRead {
+
+            notifications[index].isRead = true
+            persist(notifications[index])
+        }
+    }
+
+
+    // MARK: - Activity Feed (Phase 5)
+
+    /// PERSONAL feed: the signed-in user's own activities plus activities on
+    /// requests they posted. Newest first.
+    var visibleActivities: [CommunityActivity] {
+        ActivityFeedRules.personalFeed(
+            activities,
+            for: isLoggedIn ? currentUser.id : nil,
+            requests: requests
+        )
+    }
+
+    /// "You" for the signed-in actor, otherwise the actor's name.
+    func activityDisplayName(
+        for activity: CommunityActivity
+    ) -> String {
+        ActivityFeedRules.displayName(
+            for: activity,
+            currentUserID: isLoggedIn ? currentUser.id : nil,
+            accountNames: accountNames
+        )
+    }
+
+    /// The request a notification or activity is about (by id only).
+    func linkedRequest(
+        id requestID: UUID?
+    ) -> CommunityRequest? {
+        requestID.flatMap { request(withID: $0) }
+    }
+
+
+    // MARK: - Bookmarks (Phase 6)
+
+    /// Whether the signed-in account bookmarked this request.
+    func isBookmarked(
+        _ requestID: UUID
+    ) -> Bool {
+        BookmarkRules.isBookmarked(
+            requestID,
+            by: isLoggedIn ? currentUser.id : nil,
+            in: bookmarks
+        )
+    }
+
+    /// Saves or un-saves the request for the signed-in account only, and
+    /// persists the change.
+    /// - Returns: true when the request is now bookmarked.
+    @discardableResult
+    func toggleBookmark(
+        _ requestID: UUID
+    ) -> Bool {
+
+        guard isLoggedIn, request(withID: requestID) != nil else {
+            return false
+        }
+
+        let now = Date()
+
+        let isNowBookmarked = BookmarkRules.toggle(
+            requestID,
+            for: currentUser.id,
+            in: &bookmarks,
+            now: now
+        )
+
+        if isNowBookmarked {
+            dataStore.saveBookmark(
+                RequestBookmark(
+                    userID: currentUser.id,
+                    requestID: requestID,
+                    createdAt: now
+                ).toPersisted()
+            )
+        } else {
+            dataStore.deleteBookmark(
+                userID: currentUser.id,
+                requestID: requestID
+            )
+        }
+
+        return isNowBookmarked
+    }
+
+
+    // MARK: - Reporting (Phase 6)
+
+    /// Whether the signed-in account already reported this request.
+    func hasReported(
+        _ requestID: UUID
+    ) -> Bool {
+        ReportingRules.hasReported(
+            requestID,
+            by: isLoggedIn ? currentUser.id : nil,
+            in: requestReports
+        )
+    }
+
+    /// Saves a local report of someone else's request (once per account).
+    /// Throws a ReportError whose message the view shows in an alert.
+    func reportRequest(
+        _ requestID: UUID,
+        reason: ReportReason
+    ) throws {
+
+        try ReportingRules.validate(
+            reporterID: isLoggedIn ? currentUser.id : nil,
+            request: request(withID: requestID),
+            existingReports: requestReports
+        )
+
+        let report = RequestReport(
+            id: UUID(),
+            requestID: requestID,
+            reporterID: currentUser.id,
+            reason: reason,
+            createdAt: Date()
+        )
+
+        requestReports.append(report)
+
+        dataStore.saveRequestReport(report.toPersisted())
+    }
+
+
     private func persist(_ message: ChatMessage) {
         dataStore.saveChatMessage(message.toPersisted())
     }
@@ -436,7 +822,12 @@ final class BayanihanController {
             message: "Posted “\(newRequest.title).”",
             date: Date(),
             type: .posted,
-            actorID: currentUser.id
+            // Phase 5: real name (the feed shows "You" to the actor) and
+            // the request id. No notification: the poster is not notified
+            // about their own request.
+            actorName: currentUser.name,
+            actorID: currentUser.id,
+            requestID: newRequest.id
         )
 
         activities.insert(
@@ -490,12 +881,38 @@ final class BayanihanController {
         on request: CommunityRequest
     ) -> Bool {
 
-        RequestLifecycle.isAllowed(
+        guard RequestLifecycle.isAllowed(
             action,
             role: role(in: request),
             request: request,
             agreement: agreement(for: request.id)
-        )
+        ) else {
+            return false
+        }
+
+        // Phase 7 (Option A): "I Can Help" only when the requester is a
+        // registered account on this device.
+        if action == .offerHelp {
+            return hasRegisteredRequester(request)
+        }
+
+        return true
+    }
+
+    /// Phase 7 (Option A): true only when the request's requester id belongs
+    /// to an existing account (stable id lookup — never by display name).
+    /// Seeded community members without an account (Juan, Ana, the
+    /// Barangay) have no requester id, so their requests stay visible but
+    /// cannot receive help offers.
+    func hasRegisteredRequester(
+        _ request: CommunityRequest
+    ) -> Bool {
+
+        guard let requesterID = request.requesterID else {
+            return false
+        }
+
+        return accountNames[requesterID] != nil
     }
 
     private func requestIndex(
@@ -522,6 +939,12 @@ final class BayanihanController {
             request: requests[index],
             agreement: agreement(for: requests[index].id)
         )
+
+        // Phase 7 (Option A): the same registered-requester rule as
+        // `canPerform`, so calling `offerHelp` directly cannot bypass it.
+        if action == .offerHelp && !hasRegisteredRequester(requests[index]) {
+            throw LifecycleError.notAuthorized
+        }
     }
 
     /// Moves a request exactly one step forward in the status order.
@@ -560,20 +983,13 @@ final class BayanihanController {
 
         try advanceStatus(ofRequestAt: index, to: .inDiscussion)
 
-        let newActivity = CommunityActivity(
-            id: UUID(),
-            message: "Offered to help with “\(requests[index].title)”.",
-            date: Date(),
-            type: .volunteered,
-            actorID: currentUser.id
+        // Phase 5: the helper's own activity + notify the requester.
+        recordActivity(
+            "Offered to help with “\(requests[index].title)”.",
+            aboutRequestAt: index
         )
 
-        activities.insert(
-            newActivity,
-            at: 0
-        )
-
-        persist(newActivity)
+        notify(.helpOffered, aboutRequestAt: index)
     }
 
 
@@ -630,6 +1046,14 @@ final class BayanihanController {
         )
 
         persist(newAgreement)
+
+        // Phase 5: creator's activity + notify the other participant.
+        recordActivity(
+            "Created a help agreement for “\(requests[index].title)”.",
+            aboutRequestAt: index
+        )
+
+        notify(.agreementCreated, aboutRequestAt: index)
     }
 
 
@@ -663,11 +1087,22 @@ final class BayanihanController {
 
         persist(helpAgreements[agreementIndex])
 
+        // Phase 5: the confirmer's activity.
+        recordActivity(
+            "Confirmed the agreement for “\(requests[index].title)”.",
+            aboutRequestAt: index
+        )
+
         guard helpAgreements[agreementIndex].isConfirmed else {
+            // First confirmation: ask the other participant to confirm.
+            notify(.agreementConfirmedByOther, aboutRequestAt: index)
             return false
         }
 
         try advanceStatus(ofRequestAt: index, to: .confirmed)
+
+        // Second confirmation: tell the participant who confirmed first.
+        notify(.agreementFullyConfirmed, aboutRequestAt: index)
 
         return true
     }
@@ -697,6 +1132,14 @@ final class BayanihanController {
         helpAgreements[agreementIndex].paymentStatus = .paid
 
         persist(helpAgreements[agreementIndex])
+
+        // Phase 5: requester's activity + notify the helper.
+        recordActivity(
+            "Marked the payment for “\(requests[index].title)” as paid.",
+            aboutRequestAt: index
+        )
+
+        notify(.paymentMarkedPaid, aboutRequestAt: index)
     }
 
 
@@ -712,6 +1155,14 @@ final class BayanihanController {
         try validate(.startHelp, requestAt: index)
 
         try advanceStatus(ofRequestAt: index, to: .inProgress)
+
+        // Phase 5: helper's activity + notify the requester.
+        recordActivity(
+            "Started helping with “\(requests[index].title)”.",
+            aboutRequestAt: index
+        )
+
+        notify(.helpStarted, aboutRequestAt: index)
     }
 
 
@@ -745,7 +1196,8 @@ final class BayanihanController {
             date: Date(),
             type: .volunteered,
             actorName: requests[index].helperName ?? "Community Helper",
-            actorID: helperID
+            actorID: helperID,
+            requestID: requests[index].id
         )
 
         activities.insert(
@@ -754,6 +1206,9 @@ final class BayanihanController {
         )
 
         persist(newActivity)
+
+        // Phase 5: notify the helper (who earned the reward).
+        notify(.helpCompleted, aboutRequestAt: index)
     }
 
     /// Adds the completion reward to the helper's own account. The helper
@@ -789,30 +1244,141 @@ final class BayanihanController {
 
     // MARK: - Messages
 
+    /// Phase 4: a conversation's messages, oldest first — ONLY for the
+    /// request's requester or helper. Anyone else gets an empty list.
     func messages(
         for requestID: UUID
     ) -> [ChatMessage] {
 
-        chatMessages.filter {
-            $0.requestID == requestID
+        guard let request = request(withID: requestID),
+              canPerform(.readMessages, on: request)
+        else {
+            return []
         }
+
+        return chatMessages
+            .filter { $0.requestID == requestID }
+            .sorted { $0.createdAt < $1.createdAt }
+    }
+
+
+    // MARK: - Conversations & Unread (Phase 4)
+
+    /// The signed-in user's conversations (requests they are part of that
+    /// have a helper), most recent message activity first.
+    var messageConversations: [CommunityRequest] {
+
+        let mine = requests.filter {
+            $0.helperName != nil && isParticipant(in: $0)
+        }
+
+        return MessagingRules.sortedByRecentActivity(
+            mine,
+            messages: chatMessages
+        )
+    }
+
+    /// Unread messages for the signed-in user in one conversation.
+    func unreadMessageCount(
+        for requestID: UUID
+    ) -> Int {
+
+        guard let request = request(withID: requestID),
+              canPerform(.readMessages, on: request)
+        else {
+            return 0
+        }
+
+        return MessagingRules.unreadCount(
+            in: requestID,
+            messages: chatMessages,
+            for: currentUser.id,
+            lastReadAt: lastReadAt(for: requestID),
+            readCutoff: messageReadCutoff
+        )
+    }
+
+    /// Unread messages for the signed-in user across all their
+    /// conversations (Home / Profile badges).
+    var totalUnreadMessageCount: Int {
+        messageConversations.reduce(0) {
+            $0 + unreadMessageCount(for: $1.id)
+        }
+    }
+
+    private func lastReadAt(
+        for requestID: UUID
+    ) -> Date? {
+
+        conversationReadStates.first {
+            $0.userID == currentUser.id && $0.requestID == requestID
+        }?.lastReadAt
+    }
+
+    /// Marks everything currently in the conversation as read for the
+    /// signed-in participant. Called when the chat opens and whenever a
+    /// message arrives while it is open. Does nothing for non-participants
+    /// and skips the save when nothing is unread.
+    func markConversationRead(
+        requestID: UUID
+    ) {
+
+        guard let request = request(withID: requestID),
+              canPerform(.readMessages, on: request)
+        else {
+            return
+        }
+
+        // Phase 5 (M2): reading the chat also reads its "New Message"
+        // notification, so the bell badge matches the chat badge. Done
+        // before the early return below so it always stays in sync.
+        markMessageNotificationRead(requestID: requestID)
+
+        let existing = lastReadAt(for: requestID)
+
+        guard existing == nil || unreadMessageCount(for: requestID) > 0 else {
+            return
+        }
+
+        let readAt = MessagingRules.readTimestamp(
+            now: Date(),
+            conversationMessages: chatMessages.filter { $0.requestID == requestID }
+        )
+
+        let state = ConversationReadState(
+            userID: currentUser.id,
+            requestID: requestID,
+            lastReadAt: readAt
+        )
+
+        if let index = conversationReadStates.firstIndex(where: {
+            $0.userID == state.userID && $0.requestID == state.requestID
+        }) {
+            conversationReadStates[index].lastReadAt = readAt
+        } else {
+            conversationReadStates.append(state)
+        }
+
+        dataStore.saveConversationReadState(state.toPersisted())
     }
 
 
     // MARK: - Send Message
 
+    /// Phase 4: throws (and changes nothing) when the message cannot be
+    /// sent — not a participant, request still OPEN (Phase 3 rules), empty
+    /// text, or more than `MessagingRules.maximumMessageLength` characters.
+    /// The view only clears its text field after a successful send.
     func sendMessage(
         text: String,
         requestID: UUID
-    ) {
+    ) throws {
 
-        // Phase 3: only the requester and helper can message about a
-        // request (and only once someone has offered help).
-        guard let index = requests.firstIndex(where: { $0.id == requestID }),
-              (try? validate(.sendMessage, requestAt: index)) != nil
-        else {
-            return
-        }
+        let index = try requestIndex(for: requestID)
+
+        try validate(.sendMessage, requestAt: index)
+
+        let cleanText = try MessagingRules.validatedText(text)
 
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
@@ -822,14 +1388,19 @@ final class BayanihanController {
         let newMessage = ChatMessage(
             requestID: requestID,
             senderUsername: currentUser.username,
-            text: text,
+            text: cleanText,
             time: formatter.string(from: now),
-            senderID: currentUser.id
+            senderID: currentUser.id,
+            createdAt: now
         )
 
         chatMessages.append(newMessage)
 
-        dataStore.saveChatMessage(newMessage.toPersisted(createdAt: now))
+        dataStore.saveChatMessage(newMessage.toPersisted())
+
+        // Phase 5: one merged notification per conversation for the other
+        // participant (never the sender).
+        notify(.newMessage, aboutRequestAt: index)
     }
 
 
@@ -860,6 +1431,9 @@ final class BayanihanController {
         currentUser = saved
 
         propagateProfileChanges(of: saved)
+
+        // Phase 5: the Activity feed shows the new name to others.
+        refreshAccountNames()
     }
 
     /// Ownership is by id, so editing a profile can never break it. This
@@ -950,6 +1524,9 @@ final class BayanihanController {
 
         currentUser = user
         isLoggedIn = true
+
+        // Phase 5: keep Activity names current (new/renamed accounts).
+        refreshAccountNames()
     }
 
     /// Creates the account and signs it in. New accounts are not
@@ -978,6 +1555,9 @@ final class BayanihanController {
 
         currentUser = user
         isLoggedIn = true
+
+        // Phase 5: keep Activity names current (new/renamed accounts).
+        refreshAccountNames()
     }
 
 

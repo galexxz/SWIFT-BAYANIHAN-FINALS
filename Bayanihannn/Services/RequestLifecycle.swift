@@ -44,6 +44,8 @@ enum RequestAction: Equatable {
     case startHelp
     case completeHelp
     case sendMessage
+    /// Phase 4: retrieving / reading a request's conversation.
+    case readMessages
 }
 
 
@@ -195,6 +197,13 @@ enum RequestLifecycle {
                 throw LifecycleError.helperAlreadyAssigned
             }
 
+            // Phase 7 (Option A): a request whose requester has no account
+            // can never be confirmed or completed, so nobody may start
+            // helping with it (prevents a permanent IN DISCUSSION dead end).
+            guard request.requesterID != nil else {
+                throw LifecycleError.notAuthorized
+            }
+
         case .createAgreement:
 
             guard role.isParticipant else {
@@ -293,6 +302,15 @@ enum RequestLifecycle {
 
             guard request.status != .open else {
                 throw LifecycleError.invalidStatus(request.status)
+            }
+
+        case .readMessages:
+
+            // Phase 4: only the requester and helper may read the
+            // conversation, at any status (history stays readable after
+            // completion).
+            guard role.isParticipant else {
+                throw LifecycleError.notAuthorized
             }
         }
     }

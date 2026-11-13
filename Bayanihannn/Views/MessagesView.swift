@@ -4,15 +4,10 @@ struct MessagesView: View {
 
     @Environment(BayanihanController.self) private var controller
 
+    // Phase 4: the signed-in user's conversations (requester or helper,
+    // by account id), sorted by most recent message activity.
     private var messageRequests: [CommunityRequest] {
-        controller.requests.filter { request in
-            // Phase 2: ownership by account id (survives profile edits).
-            request.helperName != nil &&
-            (
-                controller.isCurrentUserRequester(of: request) ||
-                controller.isCurrentUserHelper(of: request)
-            )
-        }
+        controller.messageConversations
     }
 
     var body: some View {
@@ -79,7 +74,11 @@ struct MessagesView: View {
                                             lastMessage:
                                                 controller.messages(
                                                     for: request.id
-                                                ).last
+                                                ).last,
+                                            unreadCount:
+                                                controller.unreadMessageCount(
+                                                    for: request.id
+                                                )
                                         )
                                     }
                                     .buttonStyle(.plain)
@@ -107,6 +106,8 @@ struct MessageConversationRow: View {
     // Phase 2: decided by account id in the Controller.
     let isCurrentUserRequester: Bool
     let lastMessage: ChatMessage?
+    // Phase 4: real unread messages for the signed-in user.
+    let unreadCount: Int
 
     private var otherPersonName: String {
 
@@ -130,12 +131,10 @@ struct MessageConversationRow: View {
         return "Say hello to start the conversation."
     }
 
-    // Prototype note: there is no per-message read state in the current
-    // model, so this reuses the same "in discussion" signal HomeView and
-    // ProfileView already use for their unread message badge, applied
-    // here at the row level instead of just a count.
+    // Phase 4: unread = the other participant sent messages this user has
+    // not opened yet (per user, per conversation). Same existing dot.
     private var isUnread: Bool {
-        request.status == .inDiscussion
+        unreadCount > 0
     }
 
     var body: some View {

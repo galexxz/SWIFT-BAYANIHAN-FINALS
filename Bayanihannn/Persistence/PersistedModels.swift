@@ -398,15 +398,20 @@ final class PersistedActivity {
     // Phase 2: optional (lightweight migration).
     var actorID: UUID? = nil
 
+    // Phase 5: optional, default nil (lightweight migration).
+    var requestID: UUID? = nil
+
     init(
         id: UUID = UUID(),
         message: String,
         date: Date,
         typeKey: String,
         actorName: String,
-        actorID: UUID? = nil
+        actorID: UUID? = nil,
+        requestID: UUID? = nil
     ) {
         self.actorID = actorID
+        self.requestID = requestID
         self.id = id
         self.message = message
         self.date = date
@@ -540,13 +545,24 @@ final class PersistedNotification {
     var date: Date
     var isRead: Bool
 
+    // Phase 5: optional, default nil (lightweight migration). `dedupeKey`
+    // deliberately has NO unique constraint: existing rows would all share
+    // the same nil value during migration. Duplicates are prevented in the
+    // Controller instead.
+    var recipientID: UUID? = nil
+    var requestID: UUID? = nil
+    var dedupeKey: String? = nil
+
     init(
         id: UUID = UUID(),
         title: String,
         message: String,
         icon: String,
         date: Date,
-        isRead: Bool
+        isRead: Bool,
+        recipientID: UUID? = nil,
+        requestID: UUID? = nil,
+        dedupeKey: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -554,6 +570,9 @@ final class PersistedNotification {
         self.icon = icon
         self.date = date
         self.isRead = isRead
+        self.recipientID = recipientID
+        self.requestID = requestID
+        self.dedupeKey = dedupeKey
     }
 }
 
@@ -611,6 +630,166 @@ final class PersistedMigrationRecord {
     ) {
         self.name = name
         self.completedAt = completedAt
+    }
+}
+
+
+// MARK: - Persisted Conversation Read State (Phase 4)
+
+/// When one user last read one conversation. Adding this entity is a
+/// lightweight (automatic) SwiftData migration — no existing data changes.
+/// Maps to a per-user read-state document in Firestore later.
+@Model
+final class PersistedConversationReadState {
+
+    /// "<userID>|<requestID>" — one row per user per conversation.
+    @Attribute(.unique) var key: String
+
+    var userID: UUID
+    var requestID: UUID
+    var lastReadAt: Date
+
+    init(
+        userID: UUID,
+        requestID: UUID,
+        lastReadAt: Date
+    ) {
+        self.key = Self.makeKey(userID: userID, requestID: requestID)
+        self.userID = userID
+        self.requestID = requestID
+        self.lastReadAt = lastReadAt
+    }
+
+    static func makeKey(
+        userID: UUID,
+        requestID: UUID
+    ) -> String {
+        "\(userID.uuidString)|\(requestID.uuidString)"
+    }
+}
+
+
+// MARK: - Persisted Bookmark (Phase 6)
+
+/// One account's bookmarked request. New entity → lightweight (automatic)
+/// SwiftData migration; no existing data changes.
+@Model
+final class PersistedBookmark {
+
+    /// "<userID>|<requestID>" — one row per account per request.
+    @Attribute(.unique) var key: String
+
+    var userID: UUID
+    var requestID: UUID
+    var createdAt: Date
+
+    init(
+        userID: UUID,
+        requestID: UUID,
+        createdAt: Date
+    ) {
+        self.key = Self.makeKey(userID: userID, requestID: requestID)
+        self.userID = userID
+        self.requestID = requestID
+        self.createdAt = createdAt
+    }
+
+    static func makeKey(
+        userID: UUID,
+        requestID: UUID
+    ) -> String {
+        "\(userID.uuidString)|\(requestID.uuidString)"
+    }
+}
+
+
+// MARK: - Persisted Request Report (Phase 6)
+
+/// A local report of a request. New entity → lightweight migration.
+@Model
+final class PersistedRequestReport {
+
+    @Attribute(.unique) var id: UUID
+
+    var requestID: UUID
+    var reporterID: UUID
+    var reasonKey: String
+    var createdAt: Date
+
+    init(
+        id: UUID,
+        requestID: UUID,
+        reporterID: UUID,
+        reasonKey: String,
+        createdAt: Date
+    ) {
+        self.id = id
+        self.requestID = requestID
+        self.reporterID = reporterID
+        self.reasonKey = reasonKey
+        self.createdAt = createdAt
+    }
+}
+
+
+// MARK: - Conversion: RequestBookmark / RequestReport (Phase 6)
+
+extension RequestBookmark {
+
+    func toPersisted() -> PersistedBookmark {
+        PersistedBookmark(userID: userID, requestID: requestID, createdAt: createdAt)
+    }
+
+    init(persisted: PersistedBookmark) {
+        self.init(userID: persisted.userID, requestID: persisted.requestID, createdAt: persisted.createdAt)
+    }
+}
+
+extension RequestReport {
+
+    func toPersisted() -> PersistedRequestReport {
+        PersistedRequestReport(
+            id: id,
+            requestID: requestID,
+            reporterID: reporterID,
+            reasonKey: reason.rawValue,
+            createdAt: createdAt
+        )
+    }
+
+    /// Unknown stored reasons fall back to `.other` instead of failing.
+    init(persisted: PersistedRequestReport) {
+        self.init(
+            id: persisted.id,
+            requestID: persisted.requestID,
+            reporterID: persisted.reporterID,
+            reason: ReportReason(rawValue: persisted.reasonKey) ?? .other,
+            createdAt: persisted.createdAt
+        )
+    }
+}
+
+
+// MARK: - Conversion: ConversationReadState <-> PersistedConversationReadState
+
+extension ConversationReadState {
+
+    func toPersisted() -> PersistedConversationReadState {
+
+        PersistedConversationReadState(
+            userID: userID,
+            requestID: requestID,
+            lastReadAt: lastReadAt
+        )
+    }
+
+    init(persisted: PersistedConversationReadState) {
+
+        self.init(
+            userID: persisted.userID,
+            requestID: persisted.requestID,
+            lastReadAt: persisted.lastReadAt
+        )
     }
 }
 
@@ -716,7 +895,8 @@ extension CommunityActivity {
             date: date,
             typeKey: type.persistenceKey,
             actorName: actorName,
-            actorID: actorID
+            actorID: actorID,
+            requestID: requestID
         )
     }
 
@@ -728,7 +908,8 @@ extension CommunityActivity {
             date: persisted.date,
             type: ActivityType(persistenceKey: persisted.typeKey),
             actorName: persisted.actorName,
-            actorID: persisted.actorID
+            actorID: persisted.actorID,
+            requestID: persisted.requestID
         )
     }
 }
@@ -739,10 +920,10 @@ extension CommunityActivity {
 extension ChatMessage {
 
     /// Builds a PersistedChatMessage snapshot. `time` (the existing
-    /// display-formatted string) is carried over unchanged; `createdAt` is
-    /// a persistence-only ordering value, defaulting to now for messages
-    /// that predate persistence.
-    func toPersisted(createdAt: Date = Date()) -> PersistedChatMessage {
+    /// display-formatted string) is carried over unchanged. Phase 4: the
+    /// message's own `createdAt` is used, so re-saving a message can never
+    /// change its original send time.
+    func toPersisted() -> PersistedChatMessage {
 
         PersistedChatMessage(
             id: id,
@@ -763,7 +944,8 @@ extension ChatMessage {
             senderUsername: persisted.senderUsername,
             text: persisted.text,
             time: persisted.time,
-            senderID: persisted.senderID
+            senderID: persisted.senderID,
+            createdAt: persisted.createdAt
         )
     }
 }
@@ -829,7 +1011,10 @@ extension CommunityNotification {
             message: message,
             icon: icon,
             date: date,
-            isRead: isRead
+            isRead: isRead,
+            recipientID: recipientID,
+            requestID: requestID,
+            dedupeKey: dedupeKey
         )
     }
 
@@ -841,7 +1026,10 @@ extension CommunityNotification {
             message: persisted.message,
             icon: persisted.icon,
             date: persisted.date,
-            isRead: persisted.isRead
+            isRead: persisted.isRead,
+            recipientID: persisted.recipientID,
+            requestID: persisted.requestID,
+            dedupeKey: persisted.dedupeKey
         )
     }
 }

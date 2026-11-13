@@ -49,10 +49,14 @@ struct HomeView: View {
         }
     }
 
+    // Phase 4: real unread messages for the signed-in user (same badge).
     private var unreadMessageCount: Int {
-        controller.requests.filter {
-            $0.status == .inDiscussion
-        }.count
+        controller.totalUnreadMessageCount
+    }
+
+    // Phase 5: the signed-in user's unread notifications (bell badge).
+    private var unreadNotificationCount: Int {
+        controller.unreadNotificationCount
     }
 
     private var greeting: String {
@@ -135,6 +139,35 @@ struct HomeView: View {
                                     )
                                     .background(.white)
                                     .clipShape(Circle())
+                                    // Phase 5 (approved): unread
+                                    // notification badge — an exact copy of
+                                    // the Messages badge below.
+                                    .overlay(alignment: .topTrailing) {
+
+                                        if unreadNotificationCount > 0 {
+
+                                            Text("\(unreadNotificationCount)")
+                                                .font(
+                                                    .system(
+                                                        size: 7,
+                                                        weight: .bold
+                                                    )
+                                                )
+                                                .foregroundStyle(.white)
+                                                .frame(
+                                                    minWidth: 15,
+                                                    minHeight: 15
+                                                )
+                                                .background(
+                                                    Color(
+                                                        red: 0.00,
+                                                        green: 0.55,
+                                                        blue: 0.45
+                                                    )
+                                                )
+                                                .clipShape(Circle())
+                                        }
+                                    }
                                 }
                                 .buttonStyle(.plain)
 
@@ -380,7 +413,11 @@ struct HomeView: View {
                         .padding(.top, 24)
 
 
-                        if openRequests.isEmpty {
+                        // Phase 7 fix: check the list that is actually
+                        // shown (search + Urgent filter applied). Before,
+                        // a search with no matches left this section blank
+                        // because only the unfiltered list was checked.
+                        if filteredOpenRequests.isEmpty {
 
                             HomeEmptyRequestView()
                                 .padding(.top, 12)

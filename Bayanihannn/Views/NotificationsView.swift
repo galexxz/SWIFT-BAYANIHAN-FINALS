@@ -4,17 +4,21 @@ struct NotificationsView: View {
     
     @Environment(BayanihanController.self) private var controller
     
+    // Phase 5: only the signed-in user's notifications, newest first.
     private var notifications: [CommunityNotification] {
-        controller.notifications
+        controller.visibleNotifications
     }
 
+    // Phase 5: true while a tapped notification's request is being opened,
+    // so pushing that screen does not count as "leaving" Notifications.
+    @State private var isOpeningNotification = false
+
+    // Phase 5: linked by request id (no title-text matching).
     private func associatedRequest(
         for notification: CommunityNotification
     ) -> CommunityRequest? {
 
-        controller.requests.first { request in
-            notification.message.contains(request.title)
-        }
+        controller.linkedRequest(id: notification.requestID)
     }
 
     var body: some View {
@@ -61,12 +65,27 @@ struct NotificationsView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+                                // Phase 5: tapping marks it read.
+                                .simultaneousGesture(
+                                    TapGesture().onEnded {
+                                        isOpeningNotification = true
+                                        controller.markNotificationRead(
+                                            notification.id
+                                        )
+                                    }
+                                )
 
                             } else {
 
                                 NotificationRow(
                                     notification: notification
                                 )
+                                // Phase 5: tapping marks it read.
+                                .onTapGesture {
+                                    controller.markNotificationRead(
+                                        notification.id
+                                    )
+                                }
                             }
                         }
                     }
@@ -78,6 +97,19 @@ struct NotificationsView: View {
         }
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.inline)
+        // Phase 5: unread dots stay visible while viewing; everything left
+        // unread is marked read when the user leaves the screen (but not
+        // when they just opened one notification's request).
+        .onAppear {
+            isOpeningNotification = false
+        }
+        .onDisappear {
+            if isOpeningNotification {
+                isOpeningNotification = false
+            } else {
+                controller.markAllNotificationsRead()
+            }
+        }
     }
 }
 

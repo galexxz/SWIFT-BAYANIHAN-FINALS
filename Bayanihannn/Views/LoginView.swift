@@ -14,6 +14,13 @@ struct LoginView: View {
     @State private var showLoginError = false
     @State private var loginErrorMessage = ""
 
+    // Phase 6: Forgot Password / Apple sign-in are deferred until online
+    // accounts (Firebase); a system alert explains this instead of the
+    // buttons doing nothing.
+    @State private var showUnavailableAlert = false
+    @State private var unavailableTitle = ""
+    @State private var unavailableMessage = ""
+
     var body: some View {
         ZStack {
             Color(
@@ -163,7 +170,11 @@ struct LoginView: View {
                             Spacer()
                             
                             Button("Forgot Password?") {
-                                // Forgot password will be added later.
+                                // Phase 6: deferred until online accounts.
+                                showUnavailable(
+                                    title: "Password Reset Unavailable",
+                                    message: "Password reset will be available when online accounts are added. For now, please log in with your current password or create a new account."
+                                )
                             }
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(
@@ -224,7 +235,11 @@ struct LoginView: View {
                     // MARK: - Apple Login
                     
                     Button {
-                        // Apple Sign In will be added later.
+                        // Phase 6: deferred until online accounts.
+                        showUnavailable(
+                            title: "Sign in with Apple Unavailable",
+                            message: "Sign in with Apple will be available when online accounts are added. Please log in with your email or username, or create an account."
+                        )
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "apple.logo")
@@ -307,6 +322,28 @@ struct LoginView: View {
 
             Text(loginErrorMessage)
         }
+        // Phase 6: explains deferred features (system alert).
+        .alert(
+            unavailableTitle,
+            isPresented: $showUnavailableAlert
+        ) {
+
+            Button("OK", role: .cancel) {
+            }
+
+        } message: {
+
+            Text(unavailableMessage)
+        }
+    }
+
+    private func showUnavailable(
+        title: String,
+        message: String
+    ) {
+        unavailableTitle = title
+        unavailableMessage = message
+        showUnavailableAlert = true
     }
 
 

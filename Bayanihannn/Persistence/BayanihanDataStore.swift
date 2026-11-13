@@ -33,7 +33,12 @@ final class BayanihanDataStore {
             // Phase 2: new entities (adding entities is a lightweight,
             // automatic SwiftData migration — existing data is kept).
             PersistedCredential.self,
-            PersistedMigrationRecord.self
+            PersistedMigrationRecord.self,
+            // Phase 4: new entity (lightweight, automatic migration).
+            PersistedConversationReadState.self,
+            // Phase 6: new entities (lightweight, automatic migration).
+            PersistedBookmark.self,
+            PersistedRequestReport.self
         ])
 
         let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
@@ -294,6 +299,7 @@ final class BayanihanDataStore {
                 existing.typeKey = activity.typeKey
                 existing.actorName = activity.actorName
                 existing.actorID = activity.actorID
+                existing.requestID = activity.requestID
             } else {
                 context.insert(activity)
             }
@@ -401,6 +407,9 @@ final class BayanihanDataStore {
                 existing.icon = notification.icon
                 existing.date = notification.date
                 existing.isRead = notification.isRead
+                existing.recipientID = notification.recipientID
+                existing.requestID = notification.requestID
+                existing.dedupeKey = notification.dedupeKey
             } else {
                 context.insert(notification)
             }
@@ -493,6 +502,161 @@ final class BayanihanDataStore {
         }
 
         context.insert(PersistedMigrationRecord(name: name))
+        saveContext()
+    }
+
+    /// Phase 4: when a migration was completed (nil if it never ran).
+    func migrationCompletedAt(
+        _ name: String
+    ) -> Date? {
+
+        var descriptor = FetchDescriptor<PersistedMigrationRecord>(
+            predicate: #Predicate { $0.name == name }
+        )
+        descriptor.fetchLimit = 1
+
+        do {
+            return try context.fetch(descriptor).first?.completedAt
+        } catch {
+            print("BayanihanDataStore: Failed to load migration \(name): \(error)")
+            return nil
+        }
+    }
+
+
+    // MARK: - Conversation Read States (Phase 4)
+
+    func loadConversationReadStates() -> [PersistedConversationReadState] {
+
+        do {
+            return try context.fetch(FetchDescriptor<PersistedConversationReadState>())
+        } catch {
+            print("BayanihanDataStore: Failed to load conversation read states: \(error)")
+            return []
+        }
+    }
+
+    /// Updates the row for the same user + conversation, or inserts it.
+    func saveConversationReadState(
+        _ state: PersistedConversationReadState
+    ) {
+
+        let key = state.key
+
+        let descriptor = FetchDescriptor<PersistedConversationReadState>(
+            predicate: #Predicate { $0.key == key }
+        )
+
+        do {
+            if let existing = try context.fetch(descriptor).first {
+                existing.lastReadAt = state.lastReadAt
+            } else {
+                context.insert(state)
+            }
+        } catch {
+            print("BayanihanDataStore: Failed to save conversation read state: \(error)")
+            return
+        }
+
+        saveContext()
+    }
+
+
+    // MARK: - Bookmarks (Phase 6)
+
+    func loadBookmarks() -> [PersistedBookmark] {
+
+        do {
+            return try context.fetch(FetchDescriptor<PersistedBookmark>())
+        } catch {
+            print("BayanihanDataStore: Failed to load bookmarks: \(error)")
+            return []
+        }
+    }
+
+    /// Inserts the bookmark unless the same account already saved it.
+    func saveBookmark(
+        _ bookmark: PersistedBookmark
+    ) {
+
+        let key = bookmark.key
+
+        let descriptor = FetchDescriptor<PersistedBookmark>(
+            predicate: #Predicate { $0.key == key }
+        )
+
+        do {
+            guard try context.fetch(descriptor).isEmpty else {
+                return
+            }
+            context.insert(bookmark)
+        } catch {
+            print("BayanihanDataStore: Failed to save bookmark: \(error)")
+            return
+        }
+
+        saveContext()
+    }
+
+    /// Removes ONE account's bookmark of ONE request (the user un-saving
+    /// it). Never touches any other record.
+    func deleteBookmark(
+        userID: UUID,
+        requestID: UUID
+    ) {
+
+        let key = PersistedBookmark.makeKey(userID: userID, requestID: requestID)
+
+        let descriptor = FetchDescriptor<PersistedBookmark>(
+            predicate: #Predicate { $0.key == key }
+        )
+
+        do {
+            for bookmark in try context.fetch(descriptor) {
+                context.delete(bookmark)
+            }
+        } catch {
+            print("BayanihanDataStore: Failed to delete bookmark: \(error)")
+            return
+        }
+
+        saveContext()
+    }
+
+
+    // MARK: - Request Reports (Phase 6)
+
+    func loadRequestReports() -> [PersistedRequestReport] {
+
+        do {
+            return try context.fetch(FetchDescriptor<PersistedRequestReport>())
+        } catch {
+            print("BayanihanDataStore: Failed to load request reports: \(error)")
+            return []
+        }
+    }
+
+    /// Inserts a report (reports are never edited or removed).
+    func saveRequestReport(
+        _ report: PersistedRequestReport
+    ) {
+
+        let reportID = report.id
+
+        let descriptor = FetchDescriptor<PersistedRequestReport>(
+            predicate: #Predicate { $0.id == reportID }
+        )
+
+        do {
+            guard try context.fetch(descriptor).isEmpty else {
+                return
+            }
+            context.insert(report)
+        } catch {
+            print("BayanihanDataStore: Failed to save request report: \(error)")
+            return
+        }
+
         saveContext()
     }
 }

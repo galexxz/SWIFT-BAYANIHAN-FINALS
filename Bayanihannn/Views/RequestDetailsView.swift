@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit   // Phase 6: UIPasteboard for "Copy Link"
 
 struct RequestDetailsView: View {
 
@@ -21,7 +22,19 @@ struct RequestDetailsView: View {
     }
 
     @State private var showHelpAlert = false
-    @State private var isBookmarked = false
+
+    // Phase 6: the bookmark is saved per account (was a temporary value
+    // that reset every visit and was shared by all accounts).
+    private var isBookmarked: Bool {
+        controller.isBookmarked(request.id)
+    }
+
+    // Phase 6: "Report Request" options and the result / "Copy Link"
+    // confirmation (system dialog + alert, no custom UI).
+    @State private var showReportOptions = false
+    @State private var showToolAlert = false
+    @State private var toolAlertTitle = ""
+    @State private var toolAlertMessage = ""
 
     private var isMyRequest: Bool {
         // Phase 2: ownership by account id.
@@ -80,7 +93,8 @@ struct RequestDetailsView: View {
                     HStack(spacing: 8) {
 
                         Button {
-                            isBookmarked.toggle()
+                            // Phase 6: saved for the signed-in account.
+                            controller.toggleBookmark(request.id)
                         } label: {
 
                             Image(
@@ -131,11 +145,20 @@ struct RequestDetailsView: View {
                         Menu {
 
                             Button("Report Request") {
-                                // Reporting will be added later.
+                                // Phase 6: choose a reason, then save a
+                                // local report.
+                                showReportOptions = true
                             }
 
                             Button("Copy Link") {
-                                // Sharing links will be added later.
+                                // Phase 6: copies the same text the Share
+                                // button sends (no public web link exists
+                                // in the local version).
+                                UIPasteboard.general.string = shareText
+                                showToolResult(
+                                    title: "Copied",
+                                    message: "The request details were copied to your clipboard."
+                                )
                             }
 
                         } label: {
@@ -581,6 +604,72 @@ struct RequestDetailsView: View {
                 "You can coordinate with the requester through chat."
             )
         }
+        // Phase 6: report reasons (system action sheet).
+        .confirmationDialog(
+            "Report Request",
+            isPresented: $showReportOptions,
+            titleVisibility: .visible
+        ) {
+
+            ForEach(ReportReason.allCases) { reason in
+
+                Button(reason.title) {
+                    submitReport(reason)
+                }
+            }
+
+            Button("Cancel", role: .cancel) {
+            }
+
+        } message: {
+
+            Text("Why are you reporting this request?")
+        }
+        // Phase 6: result of reporting / copying (system alert).
+        .alert(
+            toolAlertTitle,
+            isPresented: $showToolAlert
+        ) {
+
+            Button("OK", role: .cancel) {
+            }
+
+        } message: {
+
+            Text(toolAlertMessage)
+        }
+    }
+
+
+    // MARK: - Report / Copy (Phase 6)
+
+    private func submitReport(
+        _ reason: ReportReason
+    ) {
+
+        do {
+            try controller.reportRequest(request.id, reason: reason)
+
+            showToolResult(
+                title: "Report Submitted",
+                message: "Thank you. Your report was saved and this request will be reviewed."
+            )
+
+        } catch {
+            showToolResult(
+                title: "Unable to Report",
+                message: error.localizedDescription
+            )
+        }
+    }
+
+    private func showToolResult(
+        title: String,
+        message: String
+    ) {
+        toolAlertTitle = title
+        toolAlertMessage = message
+        showToolAlert = true
     }
 
 
@@ -677,8 +766,10 @@ struct RequestDetailsView: View {
 
     // MARK: - Share Text
 
+    // Phase 6: same text as before, now from one shared rule (used by both
+    // the Share button and "Copy Link").
     private var shareText: String {
-        "\(request.title) — \(request.location). Help needed via Bayanihan."
+        RequestSharing.shareText(for: request)
     }
 
 

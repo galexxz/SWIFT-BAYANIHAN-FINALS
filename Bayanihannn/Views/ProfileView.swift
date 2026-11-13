@@ -18,10 +18,9 @@ struct ProfileView: View {
         controller.currentUser.requestsHelped
     }
 
+    // Phase 4: real unread messages for the signed-in user (same badge).
     private var unreadMessageCount: Int {
-        controller.requests.filter {
-            $0.status == .inDiscussion
-        }.count
+        controller.totalUnreadMessageCount
     }
 
     var body: some View {

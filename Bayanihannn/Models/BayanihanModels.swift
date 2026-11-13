@@ -303,6 +303,10 @@ struct CommunityActivity: Identifiable {
     // Phase 2: account ID of whoever performed the activity (nil for
     // seeded community members without an account).
     var actorID: UUID? = nil
+
+    // Phase 5: the request this activity is about (replaces matching the
+    // request title inside the message text). Nil when unknown.
+    var requestID: UUID? = nil
 }
 
 
@@ -367,13 +371,19 @@ struct ChatMessage: Identifiable {
     // on). Optional for messages created before accounts existed.
     var senderID: UUID?
 
+    // Phase 4: the real send time (loaded from the value SwiftData already
+    // stored). Used for ordering, unread counts and "most recent" sorting.
+    // The bubble still displays only `time` (e.g. "9:00 AM").
+    var createdAt: Date
+
     init(
         id: UUID = UUID(),
         requestID: UUID,
         senderUsername: String,
         text: String,
         time: String,
-        senderID: UUID? = nil
+        senderID: UUID? = nil,
+        createdAt: Date = Date()
     ) {
         self.id = id
         self.requestID = requestID
@@ -381,7 +391,20 @@ struct ChatMessage: Identifiable {
         self.senderID = senderID
         self.text = text
         self.time = time
+        self.createdAt = createdAt
     }
+}
+
+
+// MARK: - Conversation Read State (Phase 4)
+
+/// When one user last read one conversation (identified by its request).
+/// Messages from the other participant after `lastReadAt` are unread.
+struct ConversationReadState: Equatable {
+
+    let userID: UUID
+    let requestID: UUID
+    var lastReadAt: Date
 }
 
 
@@ -397,13 +420,23 @@ struct CommunityNotification: Identifiable {
     var date: Date
     var isRead: Bool
 
+    // Phase 5: the ONLY account that can see this notification (nil = no
+    // one), the request it is about, and the duplicate-prevention key
+    // ("event|request|recipient"; nil for older seeded notifications).
+    var recipientID: UUID?
+    var requestID: UUID?
+    var dedupeKey: String?
+
     init(
         id: UUID = UUID(),
         title: String,
         message: String,
         icon: String,
         date: Date = Date(),
-        isRead: Bool = false
+        isRead: Bool = false,
+        recipientID: UUID? = nil,
+        requestID: UUID? = nil,
+        dedupeKey: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -411,5 +444,69 @@ struct CommunityNotification: Identifiable {
         self.icon = icon
         self.date = date
         self.isRead = isRead
+        self.recipientID = recipientID
+        self.requestID = requestID
+        self.dedupeKey = dedupeKey
     }
+}
+
+
+// MARK: - Request Bookmark (Phase 6)
+
+/// One account's saved (bookmarked) request. Private to that account.
+struct RequestBookmark: Equatable {
+
+    let userID: UUID
+    let requestID: UUID
+    var createdAt: Date
+}
+
+
+// MARK: - Request Report (Phase 6)
+
+/// Why a request was reported. `rawValue` is the stable stored key.
+enum ReportReason: String, CaseIterable, Identifiable {
+
+    case spam
+    case inappropriate
+    case scam
+    case safety
+    case other
+
+    var id: String {
+        rawValue
+    }
+
+    /// Text shown in the report options.
+    var title: String {
+
+        switch self {
+
+        case .spam:
+            return "Spam or misleading"
+
+        case .inappropriate:
+            return "Inappropriate content"
+
+        case .scam:
+            return "Possible scam"
+
+        case .safety:
+            return "Safety concern"
+
+        case .other:
+            return "Something else"
+        }
+    }
+}
+
+/// A local report of a request by one account (kept for review; with
+/// Firebase it would go to a moderation queue).
+struct RequestReport: Identifiable, Equatable {
+
+    let id: UUID
+    let requestID: UUID
+    let reporterID: UUID
+    var reason: ReportReason
+    var createdAt: Date
 }
