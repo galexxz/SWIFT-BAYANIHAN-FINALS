@@ -18,9 +18,10 @@ struct MyRequestsView: View {
 
         controller.requests.filter { request in
 
+            // Phase 2: ownership by account id (survives profile edits).
             showHelped
-                ? request.helperName == controller.currentUser.name
-                : request.requesterUsername == controller.currentUser.username
+                ? controller.isCurrentUserHelper(of: request)
+                : controller.isCurrentUserRequester(of: request)
         }
     }
 

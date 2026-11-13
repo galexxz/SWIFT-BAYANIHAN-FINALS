@@ -6,10 +6,11 @@ struct MessagesView: View {
 
     private var messageRequests: [CommunityRequest] {
         controller.requests.filter { request in
+            // Phase 2: ownership by account id (survives profile edits).
             request.helperName != nil &&
             (
-                request.requesterUsername == controller.currentUser.username ||
-                request.helperName == controller.currentUser.name
+                controller.isCurrentUserRequester(of: request) ||
+                controller.isCurrentUserHelper(of: request)
             )
         }
     }
@@ -71,10 +72,10 @@ struct MessagesView: View {
 
                                         MessageConversationRow(
                                             request: request,
-                                            currentUserName:
-                                                controller.currentUser.name,
-                                            currentUsername:
-                                                controller.currentUser.username,
+                                            isCurrentUserRequester:
+                                                controller.isCurrentUserRequester(
+                                                    of: request
+                                                ),
                                             lastMessage:
                                                 controller.messages(
                                                     for: request.id
@@ -103,13 +104,13 @@ struct MessagesView: View {
 struct MessageConversationRow: View {
 
     let request: CommunityRequest
-    let currentUserName: String
-    let currentUsername: String
+    // Phase 2: decided by account id in the Controller.
+    let isCurrentUserRequester: Bool
     let lastMessage: ChatMessage?
 
     private var otherPersonName: String {
 
-        if request.requesterUsername == currentUsername {
+        if isCurrentUserRequester {
             return request.helperName ?? "Community Helper"
         }
 

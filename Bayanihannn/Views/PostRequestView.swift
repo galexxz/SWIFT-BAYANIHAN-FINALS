@@ -16,6 +16,9 @@ struct PostRequestView: View {
     
     @State private var showValidationAlert = false
     @State private var validationMessage = ""
+
+    /// Phase 3: upper limit for "People Needed".
+    private static let maximumPeopleNeeded = 20
     
     var body: some View {
 
@@ -278,9 +281,11 @@ struct PostRequestView: View {
                         )
                         .padding(.top, 17)
 
+                        // Phase 3: requests cannot be dated in the past.
                         DatePicker(
                             "",
                             selection: $requestDate,
+                            in: Calendar.current.startOfDay(for: Date())...,
                             displayedComponents: .date
                         )
                         .labelsHidden()
@@ -503,17 +508,27 @@ struct PostRequestView: View {
 
         if !cleanPeople.isEmpty {
 
+            // Phase 3: also capped at a realistic maximum.
             guard
                 let parsedPeople = Int(cleanPeople),
-                parsedPeople > 0
+                (1...Self.maximumPeopleNeeded).contains(parsedPeople)
             else {
                 showValidation(
-                    "People needed must be a valid number."
+                    "People needed must be a number from 1 to \(Self.maximumPeopleNeeded)."
                 )
                 return
             }
 
             numberOfPeople = parsedPeople
+        }
+
+        // Phase 3: no past dates (the picker already blocks them; this
+        // also covers a form left open past midnight).
+        guard requestDate >= Calendar.current.startOfDay(for: Date()) else {
+            showValidation(
+                "Please choose today or a future date."
+            )
+            return
         }
 
         controller.addRequest(

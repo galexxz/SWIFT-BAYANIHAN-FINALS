@@ -59,6 +59,13 @@ struct AppRootView: View {
                 authFlowStartsAtLogin = true
             }
         }
+        .onAppear {
+            // Phase 2: after an automatic login ("Remember Me"), a later
+            // logout should also return straight to Login, not the splash.
+            if controller.isLoggedIn {
+                authFlowStartsAtLogin = true
+            }
+        }
     }
 }
 

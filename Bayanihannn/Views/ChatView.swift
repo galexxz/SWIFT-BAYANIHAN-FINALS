@@ -27,7 +27,8 @@ struct ChatView: View {
     }
 
     private var isRequester: Bool {
-        request.requesterUsername == controller.currentUser.username
+        // Phase 2: ownership by account id.
+        controller.isCurrentUserRequester(of: request)
     }
 
     private var otherPersonName: String {
@@ -267,6 +268,11 @@ struct ChatView: View {
 
             // MARK: - Help Agreement Action
 
+            // Phase 3: "View Agreement" once one exists; "Create Help
+            // Agreement" only while the request is IN DISCUSSION.
+            if existingAgreement != nil ||
+                controller.canPerform(.createAgreement, on: request) {
+
             NavigationLink {
 
                 HelpAgreementView(
@@ -289,6 +295,7 @@ struct ChatView: View {
             .padding(.top, 8)
             .padding(.bottom, 10)
             .background(.white)
+            }
 
 
             Divider()
@@ -350,9 +357,11 @@ struct ChatView: View {
 
                                     ChatBubble(
                                         message: message,
+                                        // Phase 2: sender by account id.
                                         isCurrentUser:
-                                            message.senderUsername ==
-                                            controller.currentUser.username
+                                            controller.isCurrentUserSender(
+                                                of: message
+                                            )
                                     )
                                     .id(message.id)
                                 }

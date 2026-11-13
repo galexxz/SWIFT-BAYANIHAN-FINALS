@@ -29,7 +29,11 @@ final class BayanihanDataStore {
             PersistedActivity.self,
             PersistedChatMessage.self,
             PersistedHelpAgreement.self,
-            PersistedNotification.self
+            PersistedNotification.self,
+            // Phase 2: new entities (adding entities is a lightweight,
+            // automatic SwiftData migration — existing data is kept).
+            PersistedCredential.self,
+            PersistedMigrationRecord.self
         ])
 
         let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
@@ -256,6 +260,9 @@ final class BayanihanDataStore {
                 existing.statusKey = request.statusKey
                 existing.helperName = request.helperName
                 existing.createdAt = request.createdAt
+                existing.requesterID = request.requesterID
+                existing.helperID = request.helperID
+                existing.completionRewardGranted = request.completionRewardGranted
             } else {
                 context.insert(request)
             }
@@ -286,6 +293,7 @@ final class BayanihanDataStore {
                 existing.date = activity.date
                 existing.typeKey = activity.typeKey
                 existing.actorName = activity.actorName
+                existing.actorID = activity.actorID
             } else {
                 context.insert(activity)
             }
@@ -316,7 +324,12 @@ final class BayanihanDataStore {
                 existing.senderUsername = message.senderUsername
                 existing.text = message.text
                 existing.time = message.time
-                existing.createdAt = message.createdAt
+                existing.senderID = message.senderID
+                // Phase 2: `createdAt` is intentionally NOT overwritten on
+                // update. It is the original send time used for ordering;
+                // ChatMessage has no createdAt of its own, so an update
+                // snapshot would otherwise replace it with "now" and
+                // reorder the conversation.
             } else {
                 context.insert(message)
             }
@@ -355,6 +368,8 @@ final class BayanihanDataStore {
                 existing.paymentStatusKey = agreement.paymentStatusKey
                 existing.isConfirmedByRequester = agreement.isConfirmedByRequester
                 existing.isConfirmedByHelper = agreement.isConfirmedByHelper
+                existing.requesterID = agreement.requesterID
+                existing.helperID = agreement.helperID
             } else {
                 context.insert(agreement)
             }
@@ -394,6 +409,90 @@ final class BayanihanDataStore {
             return
         }
 
+        saveContext()
+    }
+
+
+    // MARK: - Credentials (Phase 2)
+
+    /// Returns the stored sign-in credential (salted hash) for an account.
+    func loadCredential(
+        for userID: UUID
+    ) -> PersistedCredential? {
+
+        let descriptor = FetchDescriptor<PersistedCredential>(
+            predicate: #Predicate { $0.userID == userID }
+        )
+
+        do {
+            return try context.fetch(descriptor).first
+        } catch {
+            print("BayanihanDataStore: Failed to load credential: \(error)")
+            return nil
+        }
+    }
+
+    /// Updates the credential for the same account, or inserts it.
+    @discardableResult
+    func saveCredential(
+        _ credential: PersistedCredential
+    ) -> Bool {
+
+        let userID = credential.userID
+
+        let descriptor = FetchDescriptor<PersistedCredential>(
+            predicate: #Predicate { $0.userID == userID }
+        )
+
+        do {
+            if let existing = try context.fetch(descriptor).first {
+                existing.passwordHash = credential.passwordHash
+                existing.passwordSalt = credential.passwordSalt
+                existing.iterations = credential.iterations
+                existing.algorithm = credential.algorithm
+                existing.updatedAt = credential.updatedAt
+            } else {
+                context.insert(credential)
+            }
+            try context.save()
+            return true
+        } catch {
+            print("BayanihanDataStore: Failed to save credential: \(error)")
+            return false
+        }
+    }
+
+
+    // MARK: - Migration Records (Phase 2)
+
+    func hasCompletedMigration(
+        _ name: String
+    ) -> Bool {
+
+        var descriptor = FetchDescriptor<PersistedMigrationRecord>(
+            predicate: #Predicate { $0.name == name }
+        )
+        descriptor.fetchLimit = 1
+
+        do {
+            return try context.fetchCount(descriptor) > 0
+        } catch {
+            print("BayanihanDataStore: Failed to check migration \(name): \(error)")
+            // Treat as completed so a failing check can never cause a
+            // migration to run twice.
+            return true
+        }
+    }
+
+    func markMigrationCompleted(
+        _ name: String
+    ) {
+
+        guard !hasCompletedMigration(name) else {
+            return
+        }
+
+        context.insert(PersistedMigrationRecord(name: name))
         saveContext()
     }
 }

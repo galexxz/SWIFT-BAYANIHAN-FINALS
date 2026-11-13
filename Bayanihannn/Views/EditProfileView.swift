@@ -352,14 +352,25 @@ struct EditProfileView: View {
             return
         }
 
-        controller.updateProfile(
-            name: cleanName,
-            username: cleanUsername,
-            email: cleanEmail,
-            location: cleanLocation
-        )
+        // Phase 2: the Controller/AuthService also checks the username and
+        // email format and that no OTHER account already uses them. Any
+        // problem is shown in the existing "Unable to Save Changes" alert.
+        Task {
 
-        showSaveAlert = true
+            do {
+                try await controller.updateProfile(
+                    name: cleanName,
+                    username: cleanUsername,
+                    email: cleanEmail,
+                    location: cleanLocation
+                )
+
+                showSaveAlert = true
+
+            } catch {
+                showValidation(error.localizedDescription)
+            }
+        }
     }
 
 

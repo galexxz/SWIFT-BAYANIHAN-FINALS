@@ -8,7 +8,12 @@ struct LoginView: View {
     @State private var password = ""
     @State private var rememberMe = false
     @State private var showPassword = false
-    
+
+    // Phase 2: real sign-in state (no visual change except the error alert).
+    @State private var isSubmitting = false
+    @State private var showLoginError = false
+    @State private var loginErrorMessage = ""
+
     var body: some View {
         ZStack {
             Color(
@@ -176,8 +181,8 @@ struct LoginView: View {
                     // MARK: - Log In Button
                     
                     Button {
-                        // Demo login: any credentials proceed into the app.
-                        controller.isLoggedIn = true
+                        // Phase 2: verifies the email/username + password.
+                        logIn()
                     } label: {
                         Text("Log In")
                             .font(.system(size: 14, weight: .bold))
@@ -287,9 +292,51 @@ struct LoginView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
-        // Phase 1: the tab interface is no longer pushed from here.
-        // Setting `controller.isLoggedIn = true` (Log In button above) makes
+        // Phase 1: the tab interface is no longer pushed from here. A
+        // successful login sets `controller.isLoggedIn`, which makes
         // AppRootView switch to AppTabBarView at the root.
+        .alert(
+            "Unable to Log In",
+            isPresented: $showLoginError
+        ) {
+
+            Button("OK", role: .cancel) {
+            }
+
+        } message: {
+
+            Text(loginErrorMessage)
+        }
+    }
+
+
+    // MARK: - Log In (Phase 2)
+
+    private func logIn() {
+
+        guard !isSubmitting else {
+            return
+        }
+
+        isSubmitting = true
+
+        Task {
+
+            defer {
+                isSubmitting = false
+            }
+
+            do {
+                try await controller.login(
+                    identifier: email,
+                    password: password,
+                    rememberMe: rememberMe
+                )
+            } catch {
+                loginErrorMessage = error.localizedDescription
+                showLoginError = true
+            }
+        }
     }
 }
 

@@ -24,7 +24,8 @@ struct HelpStatusView: View {
     @State private var showCompletionAlert = false
     
     private var isRequester: Bool {
-        request.requesterUsername == controller.currentUser.username
+        // Phase 2: ownership by account id.
+        controller.isCurrentUserRequester(of: request)
     }
     
     private var statusTitle: String {
@@ -402,7 +403,9 @@ struct HelpStatusView: View {
                     
                     // MARK: - Help Agreement
 
-                    if isRequester && (
+                    // Phase 3: both the requester and the helper can open
+                    // the agreement (each must confirm it separately).
+                    if controller.isParticipant(in: request) && (
                         request.status == .inDiscussion ||
                         request.status == .confirmed ||
                         request.status == .inProgress
@@ -455,10 +458,12 @@ struct HelpStatusView: View {
 
                     // MARK: - Start Help
 
-                    if isRequester && request.status == .confirmed {
+                    // Phase 3: the HELPER starts the help once both parties
+                    // confirmed (CONFIRMED → IN PROGRESS).
+                    if controller.canPerform(.startHelp, on: request) {
 
                         Button {
-                            controller.startHelp(
+                            try? controller.startHelp(
                                 for: request.id
                             )
                         } label: {
@@ -502,7 +507,9 @@ struct HelpStatusView: View {
 
                     // MARK: - Completion Button
 
-                    if isRequester && request.status == .inProgress {
+                    // Phase 3: the REQUESTER confirms the help was received
+                    // (IN PROGRESS → COMPLETED); the helper is credited.
+                    if controller.canPerform(.completeHelp, on: request) {
 
                         Button {
                             showCompletionAlert = true
@@ -561,11 +568,13 @@ struct HelpStatusView: View {
             }
             
             Button("Mark Completed") {
-                
-                controller.completeHelp(
+
+                // Phase 3: rejected (no reward) if not allowed or already
+                // completed — prevents duplicate completion rewards.
+                try? controller.completeHelp(
                     for: request.id
                 )
-                
+
                 dismiss()
             }
             

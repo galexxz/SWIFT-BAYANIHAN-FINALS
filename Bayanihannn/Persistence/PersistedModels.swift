@@ -332,6 +332,17 @@ final class PersistedRequest {
 
     var createdAt: Date
 
+    // Phase 2: optional account IDs with a default of nil. Adding optional
+    // properties is a lightweight (automatic) SwiftData migration, so the
+    // existing store opens without any reset or data loss.
+    var requesterID: UUID? = nil
+    var helperID: UUID? = nil
+
+    // Phase 3: default false → lightweight (automatic) migration. Existing
+    // completed requests stay false, but they can never be completed again,
+    // so no reward is granted retroactively.
+    var completionRewardGranted: Bool = false
+
     init(
         id: UUID = UUID(),
         title: String,
@@ -346,8 +357,14 @@ final class PersistedRequest {
         requesterUsername: String,
         statusKey: String,
         helperName: String? = nil,
-        createdAt: Date
+        createdAt: Date,
+        requesterID: UUID? = nil,
+        helperID: UUID? = nil,
+        completionRewardGranted: Bool = false
     ) {
+        self.requesterID = requesterID
+        self.helperID = helperID
+        self.completionRewardGranted = completionRewardGranted
         self.id = id
         self.title = title
         self.requestDescription = requestDescription
@@ -378,13 +395,18 @@ final class PersistedActivity {
     var typeKey: String
     var actorName: String
 
+    // Phase 2: optional (lightweight migration).
+    var actorID: UUID? = nil
+
     init(
         id: UUID = UUID(),
         message: String,
         date: Date,
         typeKey: String,
-        actorName: String
+        actorName: String,
+        actorID: UUID? = nil
     ) {
+        self.actorID = actorID
         self.id = id
         self.message = message
         self.date = date
@@ -414,14 +436,19 @@ final class PersistedChatMessage {
     /// this property.
     var createdAt: Date
 
+    // Phase 2: optional (lightweight migration).
+    var senderID: UUID? = nil
+
     init(
         id: UUID = UUID(),
         requestID: UUID,
         senderUsername: String,
         text: String,
         time: String,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        senderID: UUID? = nil
     ) {
+        self.senderID = senderID
         self.id = id
         self.requestID = requestID
         self.senderUsername = senderUsername
@@ -460,6 +487,10 @@ final class PersistedHelpAgreement {
     // (isConfirmedByRequester && isConfirmedByHelper) and is intentionally
     // not persisted.
 
+    // Phase 2: optional (lightweight migration).
+    var requesterID: UUID? = nil
+    var helperID: UUID? = nil
+
     init(
         id: UUID = UUID(),
         requestID: UUID,
@@ -473,8 +504,12 @@ final class PersistedHelpAgreement {
         amount: Double,
         paymentStatusKey: String,
         isConfirmedByRequester: Bool,
-        isConfirmedByHelper: Bool
+        isConfirmedByHelper: Bool,
+        requesterID: UUID? = nil,
+        helperID: UUID? = nil
     ) {
+        self.requesterID = requesterID
+        self.helperID = helperID
         self.id = id
         self.requestID = requestID
         self.requesterName = requesterName
@@ -523,6 +558,63 @@ final class PersistedNotification {
 }
 
 
+// MARK: - Persisted Credential
+
+/// Phase 2: local sign-in credential for one account, kept separate from
+/// the profile (PersistedUser) so password data never travels with profile
+/// data. Only a salted PBKDF2 hash is stored — never the password itself.
+/// This model is replaced by Firebase Authentication later.
+@Model
+final class PersistedCredential {
+
+    @Attribute(.unique) var userID: UUID
+
+    var passwordHash: String
+    var passwordSalt: String
+    var iterations: Int
+    var algorithm: String
+    var updatedAt: Date
+
+    init(
+        userID: UUID,
+        passwordHash: String,
+        passwordSalt: String,
+        iterations: Int,
+        algorithm: String,
+        updatedAt: Date = Date()
+    ) {
+        self.userID = userID
+        self.passwordHash = passwordHash
+        self.passwordSalt = passwordSalt
+        self.iterations = iterations
+        self.algorithm = algorithm
+        self.updatedAt = updatedAt
+    }
+}
+
+
+// MARK: - Persisted Migration Record
+
+/// Phase 2: records one-time data migrations inside the same store as the
+/// data they migrate, so a migration can never be skipped or repeated by
+/// accident.
+@Model
+final class PersistedMigrationRecord {
+
+    @Attribute(.unique) var name: String
+
+    var completedAt: Date
+
+    init(
+        name: String,
+        completedAt: Date = Date()
+    ) {
+        self.name = name
+        self.completedAt = completedAt
+    }
+}
+
+
 // MARK: - Conversion: CommunityRequest <-> PersistedRequest
 
 extension CommunityRequest {
@@ -544,7 +636,10 @@ extension CommunityRequest {
             requesterUsername: requesterUsername,
             statusKey: status.persistenceKey,
             helperName: helperName,
-            createdAt: createdAt
+            createdAt: createdAt,
+            requesterID: requesterID,
+            helperID: helperID,
+            completionRewardGranted: completionRewardGranted
         )
     }
 
@@ -564,7 +659,10 @@ extension CommunityRequest {
             requesterUsername: persisted.requesterUsername,
             status: CommunityRequestStatus(persistenceKey: persisted.statusKey),
             helperName: persisted.helperName,
-            createdAt: persisted.createdAt
+            createdAt: persisted.createdAt,
+            requesterID: persisted.requesterID,
+            helperID: persisted.helperID,
+            completionRewardGranted: persisted.completionRewardGranted
         )
     }
 }
@@ -574,14 +672,9 @@ extension CommunityRequest {
 
 extension BayanihanUser {
 
-    /// Builds a PersistedUser snapshot.
-    ///
-    /// NOTE: BayanihanUser has no `id` property of its own (there is a
-    /// single local current user in the prototype), so there is no existing
-    /// identifier to preserve here. Pass an existing `id` explicitly (e.g.
-    /// the id of a previously persisted record) to update in place; when
-    /// omitted a new identifier is generated.
-    func toPersisted(id: UUID = UUID()) -> PersistedUser {
+    /// Builds a PersistedUser snapshot, preserving the account `id` exactly
+    /// (Phase 2: BayanihanUser now carries its own stable id).
+    func toPersisted() -> PersistedUser {
 
         PersistedUser(
             id: id,
@@ -598,6 +691,7 @@ extension BayanihanUser {
     init(persisted: PersistedUser) {
 
         self.init(
+            id: persisted.id,
             name: persisted.name,
             username: persisted.username,
             email: persisted.email,
@@ -621,7 +715,8 @@ extension CommunityActivity {
             message: message,
             date: date,
             typeKey: type.persistenceKey,
-            actorName: actorName
+            actorName: actorName,
+            actorID: actorID
         )
     }
 
@@ -632,7 +727,8 @@ extension CommunityActivity {
             message: persisted.message,
             date: persisted.date,
             type: ActivityType(persistenceKey: persisted.typeKey),
-            actorName: persisted.actorName
+            actorName: persisted.actorName,
+            actorID: persisted.actorID
         )
     }
 }
@@ -654,7 +750,8 @@ extension ChatMessage {
             senderUsername: senderUsername,
             text: text,
             time: time,
-            createdAt: createdAt
+            createdAt: createdAt,
+            senderID: senderID
         )
     }
 
@@ -665,7 +762,8 @@ extension ChatMessage {
             requestID: persisted.requestID,
             senderUsername: persisted.senderUsername,
             text: persisted.text,
-            time: persisted.time
+            time: persisted.time,
+            senderID: persisted.senderID
         )
     }
 }
@@ -690,7 +788,9 @@ extension HelpAgreement {
             amount: amount,
             paymentStatusKey: paymentStatus.persistenceKey,
             isConfirmedByRequester: isConfirmedByRequester,
-            isConfirmedByHelper: isConfirmedByHelper
+            isConfirmedByHelper: isConfirmedByHelper,
+            requesterID: requesterID,
+            helperID: helperID
         )
     }
 
@@ -709,7 +809,9 @@ extension HelpAgreement {
             amount: persisted.amount,
             paymentStatus: PaymentStatus(persistenceKey: persisted.paymentStatusKey),
             isConfirmedByRequester: persisted.isConfirmedByRequester,
-            isConfirmedByHelper: persisted.isConfirmedByHelper
+            isConfirmedByHelper: persisted.isConfirmedByHelper,
+            requesterID: persisted.requesterID,
+            helperID: persisted.helperID
         )
     }
 }

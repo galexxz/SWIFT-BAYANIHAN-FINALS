@@ -23,19 +23,29 @@ struct HomeView: View {
                 request.title.localizedCaseInsensitiveContains(searchText) ||
                 request.location.localizedCaseInsensitiveContains(searchText)
 
+            // Phase 3: "Urgent" also includes Emergency requests.
             let matchesUrgency =
                 !showOnlyUrgent ||
-                request.urgency == .urgent
+                request.urgency.isUrgentOrHigher
 
             return matchesSearch && matchesUrgency
         }
     }
 
+    // Phase 2: "Your Active Help" only lists requests the signed-in account
+    // is part of (as requester or helper), so a second account does not see
+    // the first account's help in progress.
     private var activeHelpRequests: [CommunityRequest] {
         controller.requests.filter {
-            $0.status == .inDiscussion ||
-            $0.status == .confirmed ||
-            $0.status == .inProgress
+            (
+                $0.status == .inDiscussion ||
+                $0.status == .confirmed ||
+                $0.status == .inProgress
+            ) &&
+            (
+                controller.isCurrentUserRequester(of: $0) ||
+                controller.isCurrentUserHelper(of: $0)
+            )
         }
     }
 

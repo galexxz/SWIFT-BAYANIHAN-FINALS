@@ -4,6 +4,9 @@ struct SignUpView: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    // Phase 2: account creation goes through the Controller/AuthService.
+    @Environment(BayanihanController.self) private var controller
+
     @State private var fullName = ""
     @State private var email = ""
     @State private var password = ""
@@ -13,7 +16,12 @@ struct SignUpView: View {
     @State private var showPassword = false
     @State private var showConfirmPassword = false
     @State private var agreeToTerms = false
-    
+
+    // Phase 2: submission state (no visual change except the error alert).
+    @State private var isSubmitting = false
+    @State private var showSignUpError = false
+    @State private var signUpErrorMessage = ""
+
     var body: some View {
         ZStack {
             Color(
@@ -232,7 +240,8 @@ struct SignUpView: View {
                     // MARK: - Sign Up Button
                     
                     Button {
-                        // Account creation will be connected later.
+                        // Phase 2: validates and creates the local account.
+                        createAccount()
                     } label: {
                         Text("Create Account")
                             .font(.system(size: 14, weight: .bold))
@@ -293,6 +302,54 @@ struct SignUpView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        .alert(
+            "Unable to Create Account",
+            isPresented: $showSignUpError
+        ) {
+
+            Button("OK", role: .cancel) {
+            }
+
+        } message: {
+
+            Text(signUpErrorMessage)
+        }
+    }
+
+
+    // MARK: - Create Account (Phase 2)
+
+    /// On success the new account is signed in and AppRootView switches to
+    /// the tab interface. The "Email or Username" field must contain an
+    /// email address; a username is generated from the full name.
+    private func createAccount() {
+
+        guard !isSubmitting else {
+            return
+        }
+
+        isSubmitting = true
+
+        Task {
+
+            defer {
+                isSubmitting = false
+            }
+
+            do {
+                try await controller.register(
+                    fullName: fullName,
+                    email: email,
+                    password: password,
+                    confirmPassword: confirmPassword,
+                    location: location,
+                    agreedToTerms: agreeToTerms
+                )
+            } catch {
+                signUpErrorMessage = error.localizedDescription
+                showSignUpError = true
+            }
+        }
     }
 }
 
@@ -334,5 +391,6 @@ struct FormField: View {
 #Preview {
     NavigationStack {
         SignUpView()
+            .environment(BayanihanController())
     }
 }

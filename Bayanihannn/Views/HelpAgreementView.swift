@@ -32,7 +32,8 @@ struct HelpAgreementView: View {
     @State private var showConfirmedScreen = false
 
     private var isRequester: Bool {
-        request.requesterUsername == controller.currentUser.username
+        // Phase 2: ownership by account id.
+        controller.isCurrentUserRequester(of: request)
     }
 
     private var existingAgreement: HelpAgreement? {
@@ -184,8 +185,10 @@ struct HelpAgreementView: View {
 
                         agreementSummary(agreement)
 
-                    } else {
+                    } else if controller.canPerform(.createAgreement, on: request) {
 
+                        // Phase 3: only the requester or helper, while the
+                        // request is IN DISCUSSION, can create it.
                         agreementForm
                     }
 
@@ -290,9 +293,11 @@ struct HelpAgreementView: View {
             )
             .padding(.top, 17)
 
+            // Phase 3: an agreement cannot be scheduled in the past.
             DatePicker(
                 "",
                 selection: $date,
+                in: Calendar.current.startOfDay(for: Date())...,
                 displayedComponents: .date
             )
             .labelsHidden()
@@ -550,15 +555,29 @@ struct HelpAgreementView: View {
             amount = parsedAmount
         }
 
-        controller.createAgreement(
-            for: request.id,
-            description: cleanDescription,
-            date: date,
-            time: cleanTime,
-            location: cleanLocation,
-            exchangeType: exchangeType,
-            amount: amount
-        )
+        // Phase 3: no past dates.
+        guard date >= Calendar.current.startOfDay(for: Date()) else {
+            showValidation(
+                "Please choose today or a future date."
+            )
+            return
+        }
+
+        // Phase 3: the Controller checks who may create the agreement and
+        // when; any rejection is shown in the existing alert.
+        do {
+            try controller.createAgreement(
+                for: request.id,
+                description: cleanDescription,
+                date: date,
+                time: cleanTime,
+                location: cleanLocation,
+                exchangeType: exchangeType,
+                amount: amount
+            )
+        } catch {
+            showValidation(error.localizedDescription)
+        }
     }
 
 
@@ -683,17 +702,23 @@ struct HelpAgreementView: View {
 
             // MARK: - Confirm Button
 
-            if isRequester && !agreement.isConfirmed {
+            // Phase 3: shown to the requester AND the helper, each until they
+            // have confirmed themselves. The Help Confirmed screen opens only
+            // once both have confirmed; otherwise the confirmation rows
+            // above update to show who is still pending.
+            if controller.canPerform(.confirmAgreement, on: request) {
 
                 warningNote
                     .padding(.top, 20)
 
                 Button {
-                    controller.confirmAgreement(
+                    let confirmedByBoth = (try? controller.confirmAgreement(
                         for: request.id
-                    )
+                    )) ?? false
 
-                    showConfirmedScreen = true
+                    if confirmedByBoth {
+                        showConfirmedScreen = true
+                    }
 
                 } label: {
 
@@ -739,13 +764,12 @@ struct HelpAgreementView: View {
 
             // MARK: - Mark as Paid
 
-            if isRequester &&
-                agreement.isConfirmed &&
-                agreement.exchangeType != .noPayment &&
-                agreement.paymentStatus == .pending {
+            // Phase 3: same conditions as before, now enforced by the
+            // Controller (requester, both confirmed, Cash/Goods, pending).
+            if controller.canPerform(.markPaid, on: request) {
 
                 Button {
-                    controller.updatePaymentStatus(
+                    try? controller.updatePaymentStatus(
                         for: request.id,
                         status: .paid
                     )

@@ -19,9 +19,19 @@ struct CommunityRequest: Identifiable {
     
     var status: CommunityRequestStatus
     var helperName: String?
-    
+
     var createdAt: Date
-    
+
+    // Phase 2: stable account IDs. Ownership is decided by these IDs, never
+    // by names/usernames (which can change in Edit Profile). Optional so
+    // seeded community members without an account stay valid.
+    var requesterID: UUID?
+    var helperID: UUID?
+
+    // Phase 3: set when the helper has received the completion reward, so
+    // points/helped stats can never be awarded twice for one request.
+    var completionRewardGranted: Bool
+
     init(
         id: UUID = UUID(),
         title: String,
@@ -36,9 +46,13 @@ struct CommunityRequest: Identifiable {
         requesterUsername: String,
         status: CommunityRequestStatus = .open,
         helperName: String? = nil,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        requesterID: UUID? = nil,
+        helperID: UUID? = nil,
+        completionRewardGranted: Bool = false
     ) {
         self.id = id
+        self.completionRewardGranted = completionRewardGranted
         self.title = title
         self.description = description
         self.category = category
@@ -51,6 +65,8 @@ struct CommunityRequest: Identifiable {
         self.requesterUsername = requesterUsername
         self.status = status
         self.helperName = helperName
+        self.requesterID = requesterID
+        self.helperID = helperID
         self.createdAt = createdAt
     }
 }
@@ -131,6 +147,12 @@ enum RequestUrgency: String, CaseIterable, Identifiable {
             return "exclamationmark.triangle.fill"
         }
     }
+
+    /// Phase 3: the "Urgent" filter chips include Emergency requests too
+    /// (Emergency is more urgent than Urgent).
+    var isUrgentOrHigher: Bool {
+        self != .normal
+    }
 }
 
 
@@ -194,6 +216,11 @@ struct HelpAgreement: Identifiable {
     var isConfirmedByRequester: Bool
     var isConfirmedByHelper: Bool
 
+    // Phase 2: stable account IDs of both parties (optional for records
+    // created before accounts existed).
+    var requesterID: UUID?
+    var helperID: UUID?
+
     var isConfirmed: Bool {
         isConfirmedByRequester && isConfirmedByHelper
     }
@@ -211,8 +238,12 @@ struct HelpAgreement: Identifiable {
         amount: Double,
         paymentStatus: PaymentStatus = .pending,
         isConfirmedByRequester: Bool = false,
-        isConfirmedByHelper: Bool = false
+        isConfirmedByHelper: Bool = false,
+        requesterID: UUID? = nil,
+        helperID: UUID? = nil
     ) {
+        self.requesterID = requesterID
+        self.helperID = helperID
         self.id = id
         self.requestID = requestID
         self.requesterName = requesterName
@@ -268,6 +299,10 @@ struct CommunityActivity: Identifiable {
     var date: Date
     var type: ActivityType
     var actorName: String = "You"
+
+    // Phase 2: account ID of whoever performed the activity (nil for
+    // seeded community members without an account).
+    var actorID: UUID? = nil
 }
 
 
@@ -287,7 +322,11 @@ enum ActivityType: String, CaseIterable, Identifiable {
 
 // MARK: - Current User
 
-struct BayanihanUser {
+struct BayanihanUser: Identifiable, Equatable {
+
+    /// Phase 2: unique, stable account ID. Never changes, even when the
+    /// name, username or email is edited.
+    let id: UUID
 
     var name: String
     var username: String
@@ -297,6 +336,19 @@ struct BayanihanUser {
     var requestsPosted: Int
     var requestsHelped: Int
     var communityPoints: Int
+
+    /// Placeholder used before anyone has logged in. No screen that shows
+    /// profile data is visible while signed out.
+    static let signedOut = BayanihanUser(
+        id: UUID(),
+        name: "",
+        username: "",
+        email: "",
+        location: "",
+        requestsPosted: 0,
+        requestsHelped: 0,
+        communityPoints: 0
+    )
 }
 
 
@@ -311,16 +363,22 @@ struct ChatMessage: Identifiable {
     var text: String
     var time: String
 
+    // Phase 2: account ID of the sender (decides which side the bubble is
+    // on). Optional for messages created before accounts existed.
+    var senderID: UUID?
+
     init(
         id: UUID = UUID(),
         requestID: UUID,
         senderUsername: String,
         text: String,
-        time: String
+        time: String,
+        senderID: UUID? = nil
     ) {
         self.id = id
         self.requestID = requestID
         self.senderUsername = senderUsername
+        self.senderID = senderID
         self.text = text
         self.time = time
     }

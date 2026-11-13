@@ -20,7 +20,8 @@ struct HelpConfirmedView: View {
     }
 
     private var isRequester: Bool {
-        request.requesterUsername == controller.currentUser.username
+        // Phase 2: ownership by account id.
+        controller.isCurrentUserRequester(of: request)
     }
 
     private var agreement: HelpAgreement? {

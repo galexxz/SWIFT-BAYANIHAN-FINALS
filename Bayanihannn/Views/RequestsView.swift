@@ -26,9 +26,17 @@ struct RequestsView: View {
                 selectedCategory == nil ||
                 request.category == selectedCategory
 
-            let matchesUrgency =
-                selectedUrgency == nil ||
-                request.urgency == selectedUrgency
+            // Phase 3: the "Urgent" chip also includes Emergency requests.
+            let matchesUrgency: Bool
+
+            switch selectedUrgency {
+            case nil:
+                matchesUrgency = true
+            case .urgent?:
+                matchesUrgency = request.urgency.isUrgentOrHigher
+            case let other?:
+                matchesUrgency = request.urgency == other
+            }
 
             let matchesSearch =
                 searchText.trimmingCharacters(

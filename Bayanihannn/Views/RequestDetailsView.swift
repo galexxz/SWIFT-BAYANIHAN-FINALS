@@ -24,11 +24,14 @@ struct RequestDetailsView: View {
     @State private var isBookmarked = false
 
     private var isMyRequest: Bool {
-        request.requesterUsername == controller.currentUser.username
+        // Phase 2: ownership by account id.
+        controller.isCurrentUserRequester(of: request)
     }
 
+    // Phase 3: the chat shortcut is only for the helper of this request
+    // (the requester reaches the chat from Help Status / Messages).
     private var canQuickChat: Bool {
-        !isMyRequest && request.status != .open
+        !isMyRequest && controller.canPerform(.sendMessage, on: request)
     }
 
     var body: some View {
@@ -508,8 +511,9 @@ struct RequestDetailsView: View {
                     .buttonStyle(.plain)
                     .padding(.top, 23)
 
-                } else if request.status == .open {
+                } else if controller.canPerform(.offerHelp, on: request) {
 
+                    // Phase 3: OPEN requests of other accounts only.
                     Button {
                         showHelpAlert = true
                     } label: {
@@ -522,8 +526,11 @@ struct RequestDetailsView: View {
                     .buttonStyle(.plain)
                     .padding(.top, 23)
 
-                } else {
+                } else if controller.isParticipant(in: request) {
 
+                    // Phase 3: only the helper (the requester is handled
+                    // above) may open this request's chat. Other accounts
+                    // see no action button once someone is helping.
                     NavigationLink {
 
                         ChatView(
@@ -581,7 +588,10 @@ struct RequestDetailsView: View {
 
     private func iCanHelp() {
 
-        controller.offerHelp(
+        // Phase 3: the Controller re-checks the rules (own request, status,
+        // helper already assigned). The button is only shown when allowed,
+        // so a rejection here means the state changed — nothing happens.
+        try? controller.offerHelp(
             for: request.id
         )
     }

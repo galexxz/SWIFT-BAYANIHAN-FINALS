@@ -6,16 +6,16 @@ struct ProfileView: View {
 
     @State private var showSignOutConfirmation = false
 
+    // Phase 3: Posted / Helped use the same stored account statistics as
+    // Home's "Your Impact", so both screens always agree. "Helped" counts
+    // only COMPLETED help (it is credited to the helper on completion),
+    // not requests that are still in progress.
     private var myRequestsCount: Int {
-        controller.requests.filter {
-            $0.requesterUsername == controller.currentUser.username
-        }.count
+        controller.currentUser.requestsPosted
     }
 
     private var helpedCount: Int {
-        controller.requests.filter {
-            $0.helperName == controller.currentUser.name
-        }.count
+        controller.currentUser.requestsHelped
     }
 
     private var unreadMessageCount: Int {
