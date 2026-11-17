@@ -45,7 +45,7 @@ struct PostRequestView: View {
                         Text("Post a Request")
                             .font(
                                 .system(
-                                    size: 22,
+                                    size: 28,
                                     weight: .bold
                                 )
                             )
@@ -55,7 +55,7 @@ struct PostRequestView: View {
                         Text(
                             "Tell your community what you need."
                         )
-                        .font(.system(size: 9))
+                        .font(.system(size: 14))
                         .foregroundStyle(.gray)
                         .padding(.top, 4)
 
@@ -71,7 +71,7 @@ struct PostRequestView: View {
                             "What do you need help with?",
                             text: $title
                         )
-                        .font(.system(size: 9))
+                        .font(.system(size: 15))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 12)
                         .frame(height: 45)
@@ -96,7 +96,7 @@ struct PostRequestView: View {
                             text: $description,
                             axis: .vertical
                         )
-                        .font(.system(size: 9))
+                        .font(.system(size: 15))
                         .foregroundStyle(.black)
                         .lineLimit(3...6)
                         .padding(12)
@@ -147,7 +147,7 @@ struct PostRequestView: View {
                                             )
                                             .font(
                                                 .system(
-                                                    size: 8,
+                                                    size: 13,
                                                     weight: .semibold
                                                 )
                                             )
@@ -203,7 +203,7 @@ struct PostRequestView: View {
                                     )
                                     .font(
                                         .system(
-                                            size: 8,
+                                            size: 13,
                                             weight: .semibold
                                         )
                                     )
@@ -260,7 +260,7 @@ struct PostRequestView: View {
                                 "Where is help needed?",
                                 text: $location
                             )
-                            .font(.system(size: 9))
+                            .font(.system(size: 15))
                             .foregroundStyle(.black)
                         }
                         .padding(.horizontal, 12)
@@ -330,7 +330,7 @@ struct PostRequestView: View {
                                 "Example: Tomorrow, 9:00 AM",
                                 text: $time
                             )
-                            .font(.system(size: 9))
+                            .font(.system(size: 15))
                             .foregroundStyle(.black)
                         }
                         .padding(.horizontal, 12)
@@ -358,7 +358,7 @@ struct PostRequestView: View {
                                 text: $peopleNeeded
                             )
                             .keyboardType(.numberPad)
-                            .font(.system(size: 9))
+                            .font(.system(size: 15))
                             .foregroundStyle(.black)
 
                             Text(
@@ -366,7 +366,7 @@ struct PostRequestView: View {
                                     ? "person"
                                     : "people"
                             )
-                            .font(.system(size: 8))
+                            .font(.system(size: 13))
                             .foregroundStyle(.gray)
 
                             Spacer()
@@ -397,7 +397,7 @@ struct PostRequestView: View {
                                 Text("Post Request")
                                     .font(
                                         .system(
-                                            size: 11,
+                                            size: 16,
                                             weight: .bold
                                         )
                                     )
@@ -568,7 +568,7 @@ struct FormFieldTitle: View {
         Text(title)
             .font(
                 .system(
-                    size: 10,
+                    size: 14,
                     weight: .bold
                 )
             )

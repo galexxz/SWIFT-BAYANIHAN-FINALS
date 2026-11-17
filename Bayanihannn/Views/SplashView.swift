@@ -49,7 +49,7 @@ struct SplashView: View {
                         .foregroundStyle(.white)
                     
                     Text("Together We Can Make a Difference")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.white.opacity(0.9))
                 }
                 

@@ -197,7 +197,7 @@ struct RequestDetailsView: View {
                         )
                         .font(
                             .system(
-                                size: 6,
+                                size: 10,
                                 weight: .bold
                             )
                         )
@@ -219,7 +219,7 @@ struct RequestDetailsView: View {
                 Text(request.title)
                     .font(
                         .system(
-                            size: 21,
+                            size: 24,
                             weight: .bold
                         )
                     )
@@ -243,7 +243,7 @@ struct RequestDetailsView: View {
                         )
                         .font(
                             .system(
-                                size: 8,
+                                size: 13,
                                 weight: .semibold
                             )
                         )
@@ -268,7 +268,7 @@ struct RequestDetailsView: View {
                     .clipShape(Capsule())
 
                     Text(timeAgo)
-                        .font(.system(size: 8))
+                        .font(.system(size: 13))
                         .foregroundStyle(.gray)
                 }
                 .padding(.top, 8)
@@ -277,7 +277,7 @@ struct RequestDetailsView: View {
                 // MARK: - Description
 
                 Text(request.description)
-                    .font(.system(size: 10))
+                    .font(.system(size: 15))
                     .foregroundStyle(.gray)
                     .lineSpacing(3)
                     .padding(.top, 12)
@@ -329,7 +329,7 @@ struct RequestDetailsView: View {
                 Text("Posted By")
                     .font(
                         .system(
-                            size: 13,
+                            size: 18,
                             weight: .bold
                         )
                     )
@@ -354,7 +354,7 @@ struct RequestDetailsView: View {
                         )
                         .font(
                             .system(
-                                size: 12,
+                                size: 15,
                                 weight: .bold
                             )
                         )
@@ -379,14 +379,14 @@ struct RequestDetailsView: View {
                         Text(request.requesterName)
                             .font(
                                 .system(
-                                    size: 10,
+                                    size: 16,
                                     weight: .bold
                                 )
                             )
                             .foregroundStyle(.black)
 
                         Text(request.requesterUsername)
-                            .font(.system(size: 8))
+                            .font(.system(size: 13))
                             .foregroundStyle(.gray)
                     }
 
@@ -440,7 +440,7 @@ struct RequestDetailsView: View {
                     Text("Helper")
                         .font(
                             .system(
-                                size: 13,
+                                size: 18,
                                 weight: .bold
                             )
                         )
@@ -465,7 +465,7 @@ struct RequestDetailsView: View {
                             )
                             .font(
                                 .system(
-                                    size: 12,
+                                    size: 15,
                                     weight: .bold
                                 )
                             )
@@ -490,14 +490,14 @@ struct RequestDetailsView: View {
                             Text(helperName)
                                 .font(
                                     .system(
-                                        size: 10,
+                                        size: 16,
                                         weight: .bold
                                     )
                                 )
                                 .foregroundStyle(.black)
 
                             Text("Community helper")
-                                .font(.system(size: 8))
+                                .font(.system(size: 13))
                                 .foregroundStyle(.gray)
                         }
 
@@ -823,13 +823,13 @@ struct DetailInfoRow: View {
             ) {
 
                 Text(title)
-                    .font(.system(size: 7))
+                    .font(.system(size: 12))
                     .foregroundStyle(.gray)
 
                 Text(value)
                     .font(
                         .system(
-                            size: 9,
+                            size: 15,
                             weight: .semibold
                         )
                     )
@@ -859,7 +859,7 @@ struct ActionButtonLabel: View {
             Text(title)
                 .font(
                     .system(
-                        size: 11,
+                        size: 16,
                         weight: .bold
                     )
                 )

@@ -67,7 +67,7 @@ struct MyRequestsView: View {
                         Text(screenTitle)
                             .font(
                                 .system(
-                                    size: 22,
+                                    size: 28,
                                     weight: .bold
                                 )
                             )
@@ -75,7 +75,7 @@ struct MyRequestsView: View {
                             .padding(.top, 15)
 
                         Text(screenSubtitle)
-                        .font(.system(size: 9))
+                        .font(.system(size: 14))
                         .foregroundStyle(.gray)
                         .padding(.top, 4)
 
@@ -118,7 +118,7 @@ struct MyRequestsView: View {
                             Text(countLabel)
                             .font(
                                 .system(
-                                    size: 8,
+                                    size: 13,
                                     weight: .semibold
                                 )
                             )
@@ -262,7 +262,7 @@ struct MyRequestCard: View {
                     Text(request.title)
                         .font(
                             .system(
-                                size: 10,
+                                size: 16,
                                 weight: .bold
                             )
                         )
@@ -275,7 +275,7 @@ struct MyRequestCard: View {
 
 
             Text(request.description)
-                .font(.system(size: 8))
+                .font(.system(size: 13))
                 .foregroundStyle(.gray)
                 .lineLimit(2)
 
@@ -294,7 +294,7 @@ struct MyRequestCard: View {
 
                 Spacer()
             }
-            .font(.system(size: 7))
+            .font(.system(size: 12))
             .foregroundStyle(.gray)
 
 
@@ -312,7 +312,7 @@ struct MyRequestCard: View {
                     )
                     .font(
                         .system(
-                            size: 7,
+                            size: 12,
                             weight: .semibold
                         )
                     )
@@ -339,7 +339,7 @@ struct MyRequestCard: View {
                     )
                     .font(
                         .system(
-                            size: 7,
+                            size: 12,
                             weight: .semibold
                         )
                     )
@@ -355,7 +355,7 @@ struct MyRequestCard: View {
 
 
             Text(timeAgo)
-                .font(.system(size: 6))
+                .font(.system(size: 11))
                 .foregroundStyle(.gray.opacity(0.7))
         }
         .padding(13)
@@ -415,7 +415,7 @@ struct MyRequestStatusBadge: View {
         Text(status.rawValue.uppercased())
             .font(
                 .system(
-                    size: 6,
+                    size: 10,
                     weight: .bold
                 )
             )
@@ -485,7 +485,7 @@ struct EmptyMyRequestsView: View {
             )
             .font(
                 .system(
-                    size: 14,
+                    size: 17,
                     weight: .bold
                 )
             )
@@ -496,7 +496,7 @@ struct EmptyMyRequestsView: View {
                     ? "Requests you help with will appear here."
                     : "Requests you post for your community will appear here."
             )
-            .font(.system(size: 9))
+            .font(.system(size: 14))
             .foregroundStyle(.gray)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 30)

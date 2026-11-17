@@ -67,7 +67,7 @@ struct HelpAgreementView: View {
                     Text("Help Agreement")
                         .font(
                             .system(
-                                size: 22,
+                                size: 28,
                                 weight: .bold
                             )
                         )
@@ -90,7 +90,12 @@ struct HelpAgreementView: View {
                             .fontWeight(.bold)
                             .foregroundStyle(.black)
                     }
-                    .font(.system(size: 9))
+                    .font(.system(size: 14))
+                    // Typography fix: keep "Agreement between A and B" on
+                    // one line; long names shrink slightly instead of each
+                    // word group wrapping separately.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                     .padding(.top, 4)
 
 
@@ -118,7 +123,7 @@ struct HelpAgreementView: View {
                             Text(request.title)
                                 .font(
                                     .system(
-                                        size: 11,
+                                        size: 16,
                                         weight: .bold
                                     )
                                 )
@@ -132,7 +137,7 @@ struct HelpAgreementView: View {
                             )
                             .font(
                                 .system(
-                                    size: 6,
+                                    size: 10,
                                     weight: .bold
                                 )
                             )
@@ -168,7 +173,7 @@ struct HelpAgreementView: View {
                                 systemImage: "mappin.and.ellipse"
                             )
                         }
-                        .font(.system(size: 7))
+                        .font(.system(size: 12))
                         .foregroundStyle(.gray)
                     }
                     .padding(14)
@@ -249,7 +254,7 @@ struct HelpAgreementView: View {
             Text("Agreement Details")
                 .font(
                     .system(
-                        size: 13,
+                        size: 18,
                         weight: .bold
                     )
                 )
@@ -269,7 +274,7 @@ struct HelpAgreementView: View {
                 text: $description,
                 axis: .vertical
             )
-            .font(.system(size: 9))
+            .font(.system(size: 15))
             .foregroundStyle(.black)
             .lineLimit(3...6)
             .padding(12)
@@ -328,7 +333,7 @@ struct HelpAgreementView: View {
                 "Example: Tomorrow, 9:00 AM",
                 text: $time
             )
-            .font(.system(size: 9))
+            .font(.system(size: 15))
             .foregroundStyle(.black)
             .padding(.horizontal, 12)
             .frame(height: 45)
@@ -352,7 +357,7 @@ struct HelpAgreementView: View {
                 "Where will the help take place?",
                 text: $location
             )
-            .font(.system(size: 9))
+            .font(.system(size: 15))
             .foregroundStyle(.black)
             .padding(.horizontal, 12)
             .frame(height: 45)
@@ -385,7 +390,7 @@ struct HelpAgreementView: View {
                         Text(type.rawValue)
                             .font(
                                 .system(
-                                    size: 8,
+                                    size: 13,
                                     weight: .semibold
                                 )
                             )
@@ -431,7 +436,7 @@ struct HelpAgreementView: View {
                     text: $amountText
                 )
                 .keyboardType(.decimalPad)
-                .font(.system(size: 9))
+                .font(.system(size: 15))
                 .foregroundStyle(.black)
                 .padding(.horizontal, 12)
                 .frame(height: 45)
@@ -466,7 +471,7 @@ struct HelpAgreementView: View {
                     Text("Save Agreement")
                         .font(
                             .system(
-                                size: 11,
+                                size: 16,
                                 weight: .bold
                             )
                         )
@@ -660,7 +665,7 @@ struct HelpAgreementView: View {
             Text("Reimbursement")
                 .font(
                     .system(
-                        size: 13,
+                        size: 18,
                         weight: .bold
                     )
                 )
@@ -676,7 +681,7 @@ struct HelpAgreementView: View {
             Text("Agreement Confirmation")
                 .font(
                     .system(
-                        size: 13,
+                        size: 18,
                         weight: .bold
                     )
                 )
@@ -731,7 +736,7 @@ struct HelpAgreementView: View {
                         Text("Confirm Agreement")
                             .font(
                                 .system(
-                                    size: 11,
+                                    size: 16,
                                     weight: .bold
                                 )
                             )
@@ -784,7 +789,7 @@ struct HelpAgreementView: View {
                         Text("Mark as Paid")
                             .font(
                                 .system(
-                                    size: 11,
+                                    size: 16,
                                     weight: .bold
                                 )
                             )
@@ -840,7 +845,7 @@ struct HelpAgreementView: View {
                     Text("No reimbursement")
                         .font(
                             .system(
-                                size: 10,
+                                size: 15,
                                 weight: .semibold
                             )
                         )
@@ -861,7 +866,7 @@ struct HelpAgreementView: View {
                     )
                     .font(
                         .system(
-                            size: 17,
+                            size: 22,
                             weight: .bold
                         )
                     )
@@ -874,7 +879,7 @@ struct HelpAgreementView: View {
                     )
 
                     Text(agreement.exchangeType.rawValue)
-                        .font(.system(size: 8))
+                        .font(.system(size: 13))
                         .foregroundStyle(.gray)
                 }
 
@@ -885,7 +890,7 @@ struct HelpAgreementView: View {
                 )
                 .font(
                     .system(
-                        size: 7,
+                        size: 10,
                         weight: .bold
                     )
                 )
@@ -958,7 +963,7 @@ struct HelpAgreementView: View {
             Text(
                 "Before confirming, make sure you both agree on the details above."
             )
-            .font(.system(size: 8))
+            .font(.system(size: 13))
             .foregroundStyle(
                 Color(
                     red: 0.55,
@@ -994,7 +999,7 @@ struct HelpAgreementView: View {
             Text("Cancel")
                 .font(
                     .system(
-                        size: 10,
+                        size: 15,
                         weight: .semibold
                     )
                 )
@@ -1069,14 +1074,14 @@ struct ConfirmationRow: View {
                 Text(name)
                     .font(
                         .system(
-                            size: 9,
+                            size: 15,
                             weight: .semibold
                         )
                     )
                     .foregroundStyle(.black)
 
                 Text(role)
-                    .font(.system(size: 7))
+                    .font(.system(size: 12))
                     .foregroundStyle(.gray)
             }
 
@@ -1089,7 +1094,7 @@ struct ConfirmationRow: View {
             )
             .font(
                 .system(
-                    size: 7,
+                    size: 11,
                     weight: .bold
                 )
             )

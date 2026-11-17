@@ -37,7 +37,7 @@ struct MessagesView: View {
                             Text("Messages")
                                 .font(
                                     .system(
-                                        size: 22,
+                                        size: 28,
                                         weight: .bold
                                     )
                                 )
@@ -47,7 +47,7 @@ struct MessagesView: View {
                             Text(
                                 "Stay connected while helping your community."
                             )
-                            .font(.system(size: 9))
+                            .font(.system(size: 14))
                             .foregroundStyle(.gray)
                             .padding(.top, 4)
 
@@ -157,7 +157,7 @@ struct MessageConversationRow: View {
                 )
                 .font(
                     .system(
-                        size: 12,
+                        size: 16,
                         weight: .bold
                     )
                 )
@@ -184,24 +184,27 @@ struct MessageConversationRow: View {
                     Text(otherPersonName)
                         .font(
                             .system(
-                                size: 10,
+                                size: 16,
                                 weight: .bold
                             )
                         )
                         .foregroundStyle(.black)
+                        // Typography fix: long names truncate instead of
+                        // pushing the time onto a second line.
+                        .lineLimit(1)
 
                     Spacer()
 
                     if let lastMessage {
 
                         Text(lastMessage.time)
-                            .font(.system(size: 7))
+                            .font(.system(size: 12))
                             .foregroundStyle(.gray)
                     }
                 }
 
                 Text(previewText)
-                    .font(.system(size: 8))
+                    .font(.system(size: 13))
                     .foregroundStyle(.gray)
                     .lineLimit(1)
 
@@ -213,13 +216,13 @@ struct MessageConversationRow: View {
                     .font(.system(size: 7))
 
                     Text(request.category.rawValue)
-                        .font(.system(size: 7))
+                        .font(.system(size: 12))
 
                     Text("·")
-                        .font(.system(size: 7))
+                        .font(.system(size: 12))
 
                     Text(request.title)
-                        .font(.system(size: 7))
+                        .font(.system(size: 12))
                         .lineLimit(1)
                 }
                 .foregroundStyle(
@@ -321,7 +324,7 @@ struct EmptyMessagesView: View {
             Text("No Messages Yet")
                 .font(
                     .system(
-                        size: 14,
+                        size: 17,
                         weight: .bold
                     )
                 )
@@ -330,7 +333,7 @@ struct EmptyMessagesView: View {
             Text(
                 "Your conversations with the community will appear here."
             )
-            .font(.system(size: 9))
+            .font(.system(size: 14))
             .foregroundStyle(.gray)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 35)

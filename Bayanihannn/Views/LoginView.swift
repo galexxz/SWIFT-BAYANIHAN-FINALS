@@ -60,7 +60,7 @@ struct LoginView: View {
                             .foregroundStyle(.black)
                         
                         Text("Sign in to continue helping your community.")
-                            .font(.system(size: 13))
+                            .font(.system(size: 15))
                             .foregroundStyle(.gray)
                             .multilineTextAlignment(.center)
                     }
@@ -73,7 +73,7 @@ struct LoginView: View {
                         // Email
                         VStack(alignment: .leading, spacing: 7) {
                             Text("Email or Username")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black)
                             
                             TextField(
@@ -100,7 +100,7 @@ struct LoginView: View {
                         // Password
                         VStack(alignment: .leading, spacing: 7) {
                             Text("Password")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black)
                             
                             HStack {
@@ -162,7 +162,7 @@ struct LoginView: View {
                                     )
                                     
                                     Text("Remember Me")
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 14))
                                         .foregroundStyle(.gray)
                                 }
                             }
@@ -176,7 +176,7 @@ struct LoginView: View {
                                     message: "Password reset will be available when online accounts are added. For now, please log in with your current password or create a new account."
                                 )
                             }
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(
                                 Color(
                                     red: 0.00,
@@ -196,7 +196,7 @@ struct LoginView: View {
                         logIn()
                     } label: {
                         Text("Log In")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
@@ -222,7 +222,7 @@ struct LoginView: View {
                             .frame(height: 1)
                         
                         Text("OR")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.gray)
                         
                         Rectangle()
@@ -245,7 +245,7 @@ struct LoginView: View {
                             Image(systemName: "apple.logo")
                             
                             Text("Continue with Apple")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 15, weight: .semibold))
                         }
                         .foregroundStyle(.black)
                         .frame(maxWidth: .infinity)
@@ -285,13 +285,13 @@ struct LoginView: View {
                                 )
                         }
                     }
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .padding(.top, 25)
 
                     // MARK: - Footer
 
                     Text("Bayanihan · Community Assistance Platform")
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(
                             Color(
                                 red: 0.35,

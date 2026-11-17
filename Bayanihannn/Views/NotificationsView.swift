@@ -164,19 +164,19 @@ struct NotificationRow: View {
                 Text(notification.title)
                     .font(
                         .system(
-                            size: 11,
+                            size: 16,
                             weight: .bold
                         )
                     )
                     .foregroundStyle(.black)
                 
                 Text(notification.message)
-                    .font(.system(size: 9))
+                    .font(.system(size: 14))
                     .foregroundStyle(.gray)
                     .lineSpacing(2)
                 
                 Text(timeAgo)
-                .font(.system(size: 7))
+                .font(.system(size: 12))
                 .foregroundStyle(.gray.opacity(0.8))
             }
             
@@ -270,7 +270,7 @@ struct EmptyNotificationsView: View {
             Text("No Notifications Yet")
                 .font(
                     .system(
-                        size: 14,
+                        size: 17,
                         weight: .bold
                     )
                 )
@@ -279,7 +279,7 @@ struct EmptyNotificationsView: View {
             Text(
                 "Updates about your requests and help will appear here."
             )
-            .font(.system(size: 9))
+            .font(.system(size: 14))
             .foregroundStyle(.gray)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 35)

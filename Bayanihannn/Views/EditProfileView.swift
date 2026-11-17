@@ -76,7 +76,7 @@ struct EditProfileView: View {
                         Text("Your Profile")
                             .font(
                                 .system(
-                                    size: 14,
+                                    size: 18,
                                     weight: .bold
                                 )
                             )
@@ -93,7 +93,7 @@ struct EditProfileView: View {
                     Text("Full Name")
                         .font(
                             .system(
-                                size: 10,
+                                size: 14,
                                 weight: .bold
                             )
                         )
@@ -104,7 +104,7 @@ struct EditProfileView: View {
                         "Enter your full name",
                         text: $name
                     )
-                    .font(.system(size: 9))
+                    .font(.system(size: 15))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 12)
                     .frame(height: 45)
@@ -122,7 +122,7 @@ struct EditProfileView: View {
                     Text("Username")
                         .font(
                             .system(
-                                size: 10,
+                                size: 14,
                                 weight: .bold
                             )
                         )
@@ -133,7 +133,7 @@ struct EditProfileView: View {
                         "Enter your username",
                         text: $username
                     )
-                    .font(.system(size: 9))
+                    .font(.system(size: 15))
                     .foregroundStyle(.black)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -153,7 +153,7 @@ struct EditProfileView: View {
                     Text("Email")
                         .font(
                             .system(
-                                size: 10,
+                                size: 14,
                                 weight: .bold
                             )
                         )
@@ -164,7 +164,7 @@ struct EditProfileView: View {
                         "Enter your email",
                         text: $email
                     )
-                    .font(.system(size: 9))
+                    .font(.system(size: 15))
                     .foregroundStyle(.black)
                     .keyboardType(.emailAddress)
                     .textContentType(.emailAddress)
@@ -186,7 +186,7 @@ struct EditProfileView: View {
                     Text("Location")
                         .font(
                             .system(
-                                size: 10,
+                                size: 14,
                                 weight: .bold
                             )
                         )
@@ -197,7 +197,7 @@ struct EditProfileView: View {
                         "Enter your location",
                         text: $location
                     )
-                    .font(.system(size: 9))
+                    .font(.system(size: 15))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 12)
                     .frame(height: 45)
@@ -225,7 +225,7 @@ struct EditProfileView: View {
                             Text("Save Changes")
                                 .font(
                                     .system(
-                                        size: 11,
+                                        size: 16,
                                         weight: .bold
                                     )
                                 )

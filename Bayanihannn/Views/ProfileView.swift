@@ -106,7 +106,7 @@ struct ProfileView: View {
                         Text(controller.currentUser.name)
                             .font(
                                 .system(
-                                    size: 18,
+                                    size: 22,
                                     weight: .bold
                                 )
                             )
@@ -114,7 +114,7 @@ struct ProfileView: View {
                             .padding(.top, 49)
 
                         Text(controller.currentUser.username)
-                            .font(.system(size: 9))
+                            .font(.system(size: 14))
                             .foregroundStyle(.gray)
                             .padding(.top, 3)
 
@@ -126,7 +126,7 @@ struct ProfileView: View {
                             .font(.system(size: 8))
 
                             Text(controller.currentUser.location)
-                                .font(.system(size: 8))
+                                .font(.system(size: 13))
                         }
                         .foregroundStyle(.gray)
                         .padding(.top, 4)
@@ -254,7 +254,7 @@ struct ProfileView: View {
                                 Text("Log Out")
                                     .font(
                                         .system(
-                                            size: 10,
+                                            size: 15,
                                             weight: .semibold
                                         )
                                     )
@@ -296,7 +296,7 @@ struct ProfileView: View {
                             )
                             .font(
                                 .system(
-                                    size: 9,
+                                    size: 15,
                                     weight: .semibold
                                 )
                             )
@@ -306,7 +306,7 @@ struct ProfileView: View {
                             Text(
                                 "Every small act of help matters."
                             )
-                            .font(.system(size: 8))
+                            .font(.system(size: 13))
                             .foregroundStyle(.gray)
                         }
                         .frame(
@@ -394,7 +394,7 @@ struct ProfileStatCard: View {
             Text(value)
                 .font(
                     .system(
-                        size: 17,
+                        size: 22,
                         weight: .bold
                     )
                 )
@@ -407,7 +407,7 @@ struct ProfileStatCard: View {
                 )
 
             Text(title)
-                .font(.system(size: 7))
+                .font(.system(size: 12))
                 .foregroundStyle(.gray)
         }
         .frame(
@@ -473,14 +473,14 @@ struct ProfileMenuRow: View {
                 Text(title)
                     .font(
                         .system(
-                            size: 10,
+                            size: 16,
                             weight: .bold
                         )
                     )
                     .foregroundStyle(.black)
 
                 Text(subtitle)
-                    .font(.system(size: 7))
+                    .font(.system(size: 12))
                     .foregroundStyle(.gray)
             }
 
@@ -491,7 +491,7 @@ struct ProfileMenuRow: View {
                 Text("\(badgeCount)")
                     .font(
                         .system(
-                            size: 7,
+                            size: 10,
                             weight: .bold
                         )
                     )

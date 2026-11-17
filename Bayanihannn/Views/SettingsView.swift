@@ -156,7 +156,7 @@ struct SettingsView: View {
                             Text("Sign Out")
                                 .font(
                                     .system(
-                                        size: 10,
+                                        size: 15,
                                         weight: .semibold
                                     )
                                 )
@@ -220,7 +220,7 @@ struct SettingsSectionTitle: View {
         Text(title)
             .font(
                 .system(
-                    size: 13,
+                    size: 18,
                     weight: .bold
                 )
             )
@@ -278,14 +278,14 @@ struct SettingsInfoRow: View {
                 Text(title)
                     .font(
                         .system(
-                            size: 9,
+                            size: 15,
                             weight: .semibold
                         )
                     )
                     .foregroundStyle(.black)
 
                 Text(value)
-                    .font(.system(size: 8))
+                    .font(.system(size: 13))
                     .foregroundStyle(.gray)
             }
 
@@ -348,14 +348,14 @@ struct SettingsToggleRow: View {
                 Text(title)
                     .font(
                         .system(
-                            size: 9,
+                            size: 15,
                             weight: .semibold
                         )
                     )
                     .foregroundStyle(.black)
 
                 Text(subtitle)
-                    .font(.system(size: 7))
+                    .font(.system(size: 12))
                     .foregroundStyle(.gray)
             }
 
@@ -423,7 +423,7 @@ struct SettingsNavigationRow: View {
             Text(title)
                 .font(
                     .system(
-                        size: 9,
+                        size: 15,
                         weight: .semibold
                     )
                 )
@@ -485,25 +485,25 @@ struct AboutBayanihanView: View {
                     Text("Bayanihan")
                         .font(
                             .system(
-                                size: 20,
+                                size: 26,
                                 weight: .bold
                             )
                         )
                         .foregroundStyle(.black)
 
                     Text("Community Assistance Platform")
-                        .font(.system(size: 10))
+                        .font(.system(size: 14))
                         .foregroundStyle(.gray)
 
                     Text("Version 1.0.0")
-                        .font(.system(size: 9))
+                        .font(.system(size: 13))
                         .foregroundStyle(.gray)
                         .padding(.top, 4)
 
                     Text(
                         "Bayanihan connects neighbors who need help with community members willing to lend a hand — together, we make our community stronger."
                     )
-                    .font(.system(size: 9))
+                    .font(.system(size: 14))
                     .foregroundStyle(.gray)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 35)

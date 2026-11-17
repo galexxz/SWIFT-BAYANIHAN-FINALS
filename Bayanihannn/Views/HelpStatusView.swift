@@ -122,7 +122,7 @@ struct HelpStatusView: View {
                         Text(statusTitle)
                             .font(
                                 .system(
-                                    size: 17,
+                                    size: 22,
                                     weight: .bold
                                 )
                             )
@@ -130,7 +130,7 @@ struct HelpStatusView: View {
                             .multilineTextAlignment(.center)
                         
                         Text(statusMessage)
-                            .font(.system(size: 9))
+                            .font(.system(size: 14))
                             .foregroundStyle(.gray)
                             .multilineTextAlignment(.center)
                             .lineSpacing(2)
@@ -147,7 +147,7 @@ struct HelpStatusView: View {
                     Text("Request")
                         .font(
                             .system(
-                                size: 13,
+                                size: 18,
                                 weight: .bold
                             )
                         )
@@ -210,7 +210,7 @@ struct HelpStatusView: View {
                                 Text(request.title)
                                     .font(
                                         .system(
-                                            size: 10,
+                                            size: 15,
                                             weight: .semibold
                                         )
                                     )
@@ -225,11 +225,11 @@ struct HelpStatusView: View {
                             request.requesterName,
                             systemImage: "person.fill"
                         )
-                        .font(.system(size: 7))
+                        .font(.system(size: 12))
                         .foregroundStyle(.gray)
 
                         Text(request.description)
-                            .font(.system(size: 8))
+                            .font(.system(size: 13))
                             .foregroundStyle(.gray)
                             .lineSpacing(2)
 
@@ -249,11 +249,11 @@ struct HelpStatusView: View {
 
                             Spacer()
                         }
-                        .font(.system(size: 7))
+                        .font(.system(size: 12))
                         .foregroundStyle(.gray)
 
                         Text(timeAgo)
-                            .font(.system(size: 6))
+                            .font(.system(size: 11))
                             .foregroundStyle(.gray.opacity(0.7))
                     }
                     .padding(14)
@@ -277,7 +277,7 @@ struct HelpStatusView: View {
                         )
                         .font(
                             .system(
-                                size: 13,
+                                size: 18,
                                 weight: .bold
                             )
                         )
@@ -302,7 +302,7 @@ struct HelpStatusView: View {
                                 )
                                 .font(
                                     .system(
-                                        size: 13,
+                                        size: 15,
                                         weight: .bold
                                     )
                                 )
@@ -327,7 +327,7 @@ struct HelpStatusView: View {
                                 Text(helperName)
                                     .font(
                                         .system(
-                                            size: 10,
+                                            size: 15,
                                             weight: .semibold
                                         )
                                     )
@@ -338,7 +338,7 @@ struct HelpStatusView: View {
                                         ? "Community helper"
                                         : "Thank you for offering to help"
                                 )
-                                .font(.system(size: 8))
+                                .font(.system(size: 13))
                                 .foregroundStyle(.gray)
                             }
                             
@@ -360,7 +360,7 @@ struct HelpStatusView: View {
                     Text("Status")
                         .font(
                             .system(
-                                size: 13,
+                                size: 18,
                                 weight: .bold
                             )
                         )
@@ -428,7 +428,7 @@ struct HelpStatusView: View {
                                 Text("Help Agreement")
                                     .font(
                                         .system(
-                                            size: 11,
+                                            size: 16,
                                             weight: .bold
                                         )
                                     )
@@ -477,7 +477,7 @@ struct HelpStatusView: View {
                                 Text("Start Help")
                                     .font(
                                         .system(
-                                            size: 11,
+                                            size: 16,
                                             weight: .bold
                                         )
                                     )
@@ -524,7 +524,7 @@ struct HelpStatusView: View {
                                 Text("Mark as Completed")
                                     .font(
                                         .system(
-                                            size: 11,
+                                            size: 16,
                                             weight: .bold
                                         )
                                     )
@@ -819,7 +819,7 @@ struct StatusStepRow: View {
                 Text(title)
                     .font(
                         .system(
-                            size: 9,
+                            size: 14,
                             weight: isCurrent ? .bold : .semibold
                         )
                     )
@@ -830,7 +830,7 @@ struct StatusStepRow: View {
                     )
 
                 Text(subtitle)
-                    .font(.system(size: 7))
+                    .font(.system(size: 12))
                     .foregroundStyle(.gray)
             }
             .padding(.top, 1)
@@ -842,7 +842,7 @@ struct StatusStepRow: View {
                 Text("Current")
                     .font(
                         .system(
-                            size: 6,
+                            size: 10,
                             weight: .bold
                         )
                     )

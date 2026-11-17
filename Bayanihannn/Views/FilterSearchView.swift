@@ -30,7 +30,7 @@ struct FilterSearchView: View {
                     Text("Filter by Category")
                         .font(
                             .system(
-                                size: 13,
+                                size: 18,
                                 weight: .bold
                             )
                         )
@@ -78,7 +78,7 @@ struct FilterSearchView: View {
                     Text("Sort by")
                         .font(
                             .system(
-                                size: 13,
+                                size: 18,
                                 weight: .bold
                             )
                         )
@@ -100,7 +100,7 @@ struct FilterSearchView: View {
                                     Text(sort.rawValue)
                                         .font(
                                             .system(
-                                                size: 10,
+                                                size: 15,
                                                 weight: .semibold
                                             )
                                         )
@@ -177,7 +177,7 @@ struct FilterSearchView: View {
                         Text("Apply Filters")
                             .font(
                                 .system(
-                                    size: 11,
+                                    size: 16,
                                     weight: .bold
                                 )
                             )
@@ -236,7 +236,7 @@ struct FilterChip: View {
                 Text(title)
                     .font(
                         .system(
-                            size: 8,
+                            size: 13,
                             weight: .semibold
                         )
                     )

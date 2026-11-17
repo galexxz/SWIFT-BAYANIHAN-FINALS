@@ -38,7 +38,7 @@ struct OnboardingView: View {
                     Button("Skip") {
                         showLogin = true
                     }
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(
                         Color(
                             red: 0.00,
@@ -59,7 +59,7 @@ struct OnboardingView: View {
                 
                 // Title
                 Text(pages[currentPage].title)
-                    .font(.system(size: 21, weight: .bold))
+                    .font(.system(size: 26, weight: .bold))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.black)
                     .padding(.horizontal, 30)
@@ -67,7 +67,7 @@ struct OnboardingView: View {
                 
                 // Description
                 Text(pages[currentPage].description)
-                    .font(.system(size: 13))
+                    .font(.system(size: 15))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.gray)
                     .lineSpacing(4)
@@ -116,7 +116,7 @@ struct OnboardingView: View {
                         ? "Next"
                         : "Get Started"
                     )
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -133,7 +133,7 @@ struct OnboardingView: View {
                 
                 // Footer
                 Text("Bayanihan · Community Assistance Platform")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(
                         Color(
                             red: 0.35,

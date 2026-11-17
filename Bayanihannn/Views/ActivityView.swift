@@ -50,7 +50,7 @@ struct ActivityView: View {
                         Text("Activity")
                             .font(
                                 .system(
-                                    size: 22,
+                                    size: 28,
                                     weight: .bold
                                 )
                             )
@@ -60,7 +60,7 @@ struct ActivityView: View {
                         Text(
                             "Keep track of your community involvement."
                         )
-                        .font(.system(size: 9))
+                        .font(.system(size: 14))
                         .foregroundStyle(.gray)
                         .padding(.top, 4)
 
@@ -199,7 +199,7 @@ struct ActivityRow: View {
                 )
                 .font(
                     .system(
-                        size: 10,
+                        size: 14,
                         weight: .bold
                     )
                 )
@@ -226,7 +226,7 @@ struct ActivityRow: View {
                     Text(actorName)
                         .font(
                             .system(
-                                size: 9,
+                                size: 15,
                                 weight: .bold
                             )
                         )
@@ -247,15 +247,15 @@ struct ActivityRow: View {
                             )
                     }
                 }
-                .font(.system(size: 7))
+                .font(.system(size: 12))
 
                 Text(activity.message)
-                    .font(.system(size: 8))
+                    .font(.system(size: 13))
                     .foregroundStyle(.gray)
                     .lineLimit(2)
 
                 Text(timeAgo)
-                    .font(.system(size: 6))
+                    .font(.system(size: 11))
                     .foregroundStyle(.gray.opacity(0.7))
             }
 
@@ -383,14 +383,14 @@ struct EmptyActivityView: View {
             Text(title)
                 .font(
                     .system(
-                        size: 14,
+                        size: 17,
                         weight: .bold
                     )
                 )
                 .foregroundStyle(.black)
 
             Text(message)
-                .font(.system(size: 9))
+                .font(.system(size: 14))
                 .foregroundStyle(.gray)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 30)

@@ -57,11 +57,11 @@ struct SignUpView: View {
 
                     VStack(spacing: 8) {
                         Text("Create an Account")
-                            .font(.system(size: 27, weight: .bold))
+                            .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(.black)
 
                         Text("Join Bayanihan and start helping your community.")
-                            .font(.system(size: 13))
+                            .font(.system(size: 15))
                             .foregroundStyle(.gray)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 25)
@@ -82,7 +82,7 @@ struct SignUpView: View {
                         // Email
                         VStack(alignment: .leading, spacing: 7) {
                             Text("Email or Username")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black)
                             
                             TextField(
@@ -109,7 +109,7 @@ struct SignUpView: View {
                         // Password
                         VStack(alignment: .leading, spacing: 7) {
                             Text("Password")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black)
                             
                             HStack {
@@ -154,7 +154,7 @@ struct SignUpView: View {
                         // Confirm Password
                         VStack(alignment: .leading, spacing: 7) {
                             Text("Confirm Password")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black)
                             
                             HStack {
@@ -227,7 +227,7 @@ struct SignUpView: View {
                                 Text(
                                     "I agree to the Bayanihan Terms and Privacy Policy."
                                 )
-                                .font(.system(size: 11))
+                                .font(.system(size: 13))
                                 .foregroundStyle(.gray)
                                 .multilineTextAlignment(.leading)
                             }
@@ -244,7 +244,7 @@ struct SignUpView: View {
                         createAccount()
                     } label: {
                         Text("Create Account")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
@@ -280,13 +280,13 @@ struct SignUpView: View {
                             )
                         )
                     }
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .padding(.top, 20)
 
                     // MARK: - Footer
 
                     Text("Bayanihan · Community Assistance Platform")
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(
                             Color(
                                 red: 0.35,
@@ -366,7 +366,7 @@ struct FormField: View {
         VStack(alignment: .leading, spacing: 7) {
             
             Text(title)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.black)
             
             TextField(placeholder, text: $text)

@@ -103,7 +103,7 @@ struct HomeView: View {
                             ) {
 
                                 Text(greeting)
-                                    .font(.system(size: 9))
+                                    .font(.system(size: 14))
                                     .foregroundStyle(.gray)
 
                                 Text(
@@ -111,11 +111,16 @@ struct HomeView: View {
                                 )
                                 .font(
                                     .system(
-                                        size: 21,
+                                        size: 26,
                                         weight: .bold
                                     )
                                 )
                                 .foregroundStyle(.black)
+                                // Typography fix: one line next to the
+                                // header buttons; long names shrink a little
+                                // instead of wrapping mid-name.
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                             }
 
                             Spacer()
@@ -149,7 +154,7 @@ struct HomeView: View {
                                             Text("\(unreadNotificationCount)")
                                                 .font(
                                                     .system(
-                                                        size: 7,
+                                                        size: 10,
                                                         weight: .bold
                                                     )
                                                 )
@@ -195,7 +200,7 @@ struct HomeView: View {
                                             Text("\(unreadMessageCount)")
                                                 .font(
                                                     .system(
-                                                        size: 7,
+                                                        size: 10,
                                                         weight: .bold
                                                     )
                                                 )
@@ -233,7 +238,7 @@ struct HomeView: View {
                                     )
                                     .font(
                                         .system(
-                                            size: 13,
+                                            size: 14,
                                             weight: .bold
                                         )
                                     )
@@ -268,7 +273,7 @@ struct HomeView: View {
                                 "Search requests...",
                                 text: $searchText
                             )
-                            .font(.system(size: 9))
+                            .font(.system(size: 15))
                             .foregroundStyle(.black)
 
                             if !searchText.isEmpty {
@@ -332,7 +337,7 @@ struct HomeView: View {
                                 )
                                 .font(
                                     .system(
-                                        size: 15,
+                                        size: 18,
                                         weight: .bold
                                     )
                                 )
@@ -343,7 +348,7 @@ struct HomeView: View {
                                 )
 
                                 Text("Help · Support · Unite")
-                                    .font(.system(size: 9))
+                                    .font(.system(size: 14))
                                     .foregroundStyle(.white.opacity(0.9))
                             }
 
@@ -378,7 +383,7 @@ struct HomeView: View {
                             Text("Recent Requests")
                                 .font(
                                     .system(
-                                        size: 14,
+                                        size: 18,
                                         weight: .bold
                                     )
                                 )
@@ -397,7 +402,7 @@ struct HomeView: View {
                                 Text("See All")
                                     .font(
                                         .system(
-                                            size: 8,
+                                            size: 13,
                                             weight: .bold
                                         )
                                     )
@@ -460,7 +465,7 @@ struct HomeView: View {
                             Text("Your Active Help")
                                 .font(
                                     .system(
-                                        size: 14,
+                                        size: 18,
                                         weight: .bold
                                     )
                                 )
@@ -501,7 +506,7 @@ struct HomeView: View {
                         Text("Your Impact")
                             .font(
                                 .system(
-                                    size: 14,
+                                    size: 18,
                                     weight: .bold
                                 )
                             )
@@ -573,7 +578,7 @@ struct ImpactCard: View {
             Text(value)
                 .font(
                     .system(
-                        size: 17,
+                        size: 22,
                         weight: .bold
                     )
                 )
@@ -586,7 +591,7 @@ struct ImpactCard: View {
                 )
 
             Text(title)
-                .font(.system(size: 8))
+                .font(.system(size: 13))
                 .foregroundStyle(.gray)
         }
         .frame(
@@ -662,7 +667,7 @@ struct HomeRequestCard: View {
                 Text(request.title)
                     .font(
                         .system(
-                            size: 10,
+                            size: 16,
                             weight: .bold
                         )
                     )
@@ -673,11 +678,11 @@ struct HomeRequestCard: View {
                     request.location,
                     systemImage: "mappin.and.ellipse"
                 )
-                .font(.system(size: 7))
+                .font(.system(size: 12))
                 .foregroundStyle(.gray)
 
                 Text(timeAgo)
-                    .font(.system(size: 7))
+                    .font(.system(size: 12))
                     .foregroundStyle(.gray.opacity(0.8))
             }
 
@@ -756,7 +761,7 @@ struct ActiveHelpCard: View {
                 Text(request.title)
                     .font(
                         .system(
-                            size: 10,
+                            size: 16,
                             weight: .bold
                         )
                     )
@@ -768,13 +773,13 @@ struct ActiveHelpCard: View {
                         ? "Help is being arranged"
                         : "Helping \(request.requesterName)"
                 )
-                .font(.system(size: 8))
+                .font(.system(size: 13))
                 .foregroundStyle(.gray)
 
                 Text(request.status.rawValue)
                     .font(
                         .system(
-                            size: 7,
+                            size: 11,
                             weight: .bold
                         )
                     )
@@ -823,7 +828,7 @@ struct HomeEmptyRequestView: View {
             Text("No open requests right now")
                 .font(
                     .system(
-                        size: 11,
+                        size: 16,
                         weight: .semibold
                     )
                 )
@@ -832,7 +837,7 @@ struct HomeEmptyRequestView: View {
             Text(
                 "Check again later or post a request yourself."
             )
-            .font(.system(size: 8))
+            .font(.system(size: 13))
             .foregroundStyle(.gray)
             .multilineTextAlignment(.center)
         }

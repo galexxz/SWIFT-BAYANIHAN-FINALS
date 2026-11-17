@@ -134,7 +134,7 @@ struct RequestsView: View {
                         Text("Requests")
                             .font(
                                 .system(
-                                    size: 22,
+                                    size: 28,
                                     weight: .bold
                                 )
                             )
@@ -144,7 +144,7 @@ struct RequestsView: View {
                         Text(
                             "Find someone in your community who needs help."
                         )
-                        .font(.system(size: 9))
+                        .font(.system(size: 14))
                         .foregroundStyle(.gray)
                         .padding(.top, 4)
                         
@@ -163,7 +163,7 @@ struct RequestsView: View {
                                 "Search requests...",
                                 text: $searchText
                             )
-                            .font(.system(size: 9))
+                            .font(.system(size: 15))
                             .foregroundStyle(.black)
                             
                             if !searchText.isEmpty {
@@ -231,7 +231,7 @@ struct RequestsView: View {
                                     Text("Filter")
                                         .font(
                                             .system(
-                                                size: 8,
+                                                size: 13,
                                                 weight: .semibold
                                             )
                                         )
@@ -272,7 +272,7 @@ struct RequestsView: View {
                             )
                             .font(
                                 .system(
-                                    size: 10,
+                                    size: 14,
                                     weight: .bold
                                 )
                             )
@@ -425,7 +425,7 @@ struct CommunityRequestCard: View {
                     Text(request.title)
                         .font(
                             .system(
-                                size: 10,
+                                size: 16,
                                 weight: .bold
                             )
                         )
@@ -438,7 +438,7 @@ struct CommunityRequestCard: View {
             
             
             Text(request.description)
-                .font(.system(size: 8))
+                .font(.system(size: 13))
                 .foregroundStyle(.gray)
                 .lineLimit(2)
             
@@ -457,7 +457,7 @@ struct CommunityRequestCard: View {
                 
                 Spacer()
             }
-            .font(.system(size: 7))
+            .font(.system(size: 12))
             .foregroundStyle(.gray)
             
             
@@ -471,7 +471,7 @@ struct CommunityRequestCard: View {
                     .font(.system(size: 8))
                     
                     Text(request.requesterName)
-                        .font(.system(size: 7))
+                        .font(.system(size: 12))
                 }
                 
                 Spacer()
@@ -483,7 +483,7 @@ struct CommunityRequestCard: View {
                 )
                 .font(
                     .system(
-                        size: 7,
+                        size: 12,
                         weight: .semibold
                     )
                 )
@@ -491,7 +491,7 @@ struct CommunityRequestCard: View {
             .foregroundStyle(.gray)
 
             Text(timeAgo)
-                .font(.system(size: 6))
+                .font(.system(size: 11))
                 .foregroundStyle(.gray.opacity(0.7))
         }
         .padding(13)
@@ -556,7 +556,7 @@ struct UrgencyFilterChip: View {
             Text(title)
                 .font(
                     .system(
-                        size: 8,
+                        size: 13,
                         weight: .semibold
                     )
                 )
@@ -600,7 +600,7 @@ struct UrgencyBadge: View {
         )
         .font(
             .system(
-                size: 6,
+                size: 10,
                 weight: .bold
             )
         )
@@ -660,7 +660,7 @@ struct EmptyRequestsView: View {
             )
             .font(
                 .system(
-                    size: 14,
+                    size: 17,
                     weight: .bold
                 )
             )
@@ -671,7 +671,7 @@ struct EmptyRequestsView: View {
                     ? "New community help requests will appear here."
                     : "Try a different search or filter."
             )
-            .font(.system(size: 9))
+            .font(.system(size: 14))
             .foregroundStyle(.gray)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 30)

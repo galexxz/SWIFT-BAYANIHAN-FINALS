@@ -155,14 +155,14 @@ struct SupportDetailRow: View {
                 Text(item.title)
                     .font(
                         .system(
-                            size: 9,
+                            size: 15,
                             weight: .semibold
                         )
                     )
                     .foregroundStyle(.black)
 
                 Text(item.detail)
-                    .font(.system(size: 8))
+                    .font(.system(size: 13))
                     .foregroundStyle(.gray)
                     .fixedSize(
                         horizontal: false,

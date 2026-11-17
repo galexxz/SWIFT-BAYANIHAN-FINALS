@@ -68,7 +68,7 @@ struct ChatView: View {
                     )
                     .font(
                         .system(
-                            size: 11,
+                            size: 13,
                             weight: .bold
                         )
                     )
@@ -107,7 +107,7 @@ struct ChatView: View {
                     Text(otherPersonName)
                         .font(
                             .system(
-                                size: 11,
+                                size: 16,
                                 weight: .bold
                             )
                         )
@@ -115,7 +115,7 @@ struct ChatView: View {
                         .lineLimit(1)
 
                     Text(request.title)
-                        .font(.system(size: 8))
+                        .font(.system(size: 13))
                         .foregroundStyle(.gray)
                         .lineLimit(1)
                 }
@@ -127,7 +127,7 @@ struct ChatView: View {
                 )
                 .font(
                     .system(
-                        size: 7,
+                        size: 11,
                         weight: .bold
                     )
                 )
@@ -203,7 +203,7 @@ struct ChatView: View {
                     Text(request.title)
                         .font(
                             .system(
-                                size: 9,
+                                size: 15,
                                 weight: .bold
                             )
                         )
@@ -219,7 +219,7 @@ struct ChatView: View {
                         Text(request.location)
                             .lineLimit(1)
                     }
-                    .font(.system(size: 7))
+                    .font(.system(size: 12))
                     .foregroundStyle(.gray)
                 }
 
@@ -236,7 +236,7 @@ struct ChatView: View {
                     Text("View")
                         .font(
                             .system(
-                                size: 8,
+                                size: 13,
                                 weight: .bold
                             )
                         )
@@ -326,7 +326,7 @@ struct ChatView: View {
                         Text("Start a Conversation")
                             .font(
                                 .system(
-                                    size: 13,
+                                    size: 17,
                                     weight: .bold
                                 )
                             )
@@ -335,7 +335,7 @@ struct ChatView: View {
                         Text(
                             "Send a message to coordinate the help request."
                         )
-                        .font(.system(size: 8))
+                        .font(.system(size: 13))
                         .foregroundStyle(.gray)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
@@ -428,7 +428,7 @@ struct ChatView: View {
                     text: $messageText,
                     axis: .vertical
                 )
-                .font(.system(size: 9))
+                .font(.system(size: 15))
                 .foregroundStyle(.black)
                 .lineLimit(1...4)
                 // Phase 4: typed/pasted text is capped at the
@@ -605,7 +605,7 @@ struct ChatBubble: View {
             ) {
 
                 Text(message.text)
-                    .font(.system(size: 9))
+                    .font(.system(size: 15))
                     .foregroundStyle(
                         isCurrentUser
                             ? .white
@@ -631,7 +631,7 @@ struct ChatBubble: View {
                 Text(
                     message.time
                 )
-                .font(.system(size: 6))
+                .font(.system(size: 11))
                 .foregroundStyle(.gray)
             }
 

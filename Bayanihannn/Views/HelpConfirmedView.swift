@@ -85,7 +85,7 @@ struct HelpConfirmedView: View {
                     Text("Help Confirmed! 🎉")
                         .font(
                             .system(
-                                size: 20,
+                                size: 26,
                                 weight: .bold
                             )
                         )
@@ -95,7 +95,7 @@ struct HelpConfirmedView: View {
                     Text(
                         "You and \(otherPersonName) have agreed on the details."
                     )
-                    .font(.system(size: 10))
+                    .font(.system(size: 15))
                     .foregroundStyle(.gray)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 30)
@@ -109,7 +109,7 @@ struct HelpConfirmedView: View {
                         Text("Agreement Summary")
                             .font(
                                 .system(
-                                    size: 13,
+                                    size: 18,
                                     weight: .bold
                                 )
                             )
@@ -196,7 +196,7 @@ struct HelpConfirmedView: View {
                         Text("View Conversation")
                             .font(
                                 .system(
-                                    size: 11,
+                                    size: 16,
                                     weight: .bold
                                 )
                             )
@@ -244,7 +244,7 @@ struct HelpConfirmedView: View {
                         Text("Done")
                             .font(
                                 .system(
-                                    size: 11,
+                                    size: 16,
                                     weight: .bold
                                 )
                             )
